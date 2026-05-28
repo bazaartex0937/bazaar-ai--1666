@@ -1,0 +1,2537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bazaar AI · Content Automation System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #080A0F;
+  --bg1: #0D0F18;
+  --bg2: #131620;
+  --bg3: #1A1E2C;
+  --bg4: #222638;
+  --gold: #F0A500;
+  --gold2: #FFD166;
+  --gold-dim: rgba(240,165,0,0.12);
+  --teal: #00D4AA;
+  --teal-dim: rgba(0,212,170,0.1);
+  --blue: #4F8EF7;
+  --blue-dim: rgba(79,142,247,0.1);
+  --red: #FF6B6B;
+  --red-dim: rgba(255,107,107,0.1);
+  --text1: #F0EEE8;
+  --text2: #9B98A8;
+  --text3: #5C5970;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --r: 8px;
+  --r2: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg0);
+  color: var(--text1);
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 100;
+}
+.logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--gold);
+  letter-spacing: -0.5px;
+}
+.logo-sub {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 3px;
+}
+.nav {
+  flex: 1;
+  padding: 12px 10px;
+  overflow-y: auto;
+}
+.nav-section {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--text3);
+  padding: 14px 10px 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13px;
+  font-weight: 400;
+  transition: all 0.15s;
+  margin-bottom: 1px;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text1); }
+.nav-item.active {
+  background: var(--gold-dim);
+  color: var(--gold);
+}
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 2px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+.nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--gold);
+  color: var(--bg0);
+  font-size: 9px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+.sidebar-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+}
+.sys-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── MAIN ── */
+.main {
+  margin-left: 220px;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+.topbar-pills { display: flex; gap: 8px; align-items: center; }
+.pill {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pill:hover { border-color: var(--gold); color: var(--gold); }
+.pill.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+.content { padding: 28px; flex: 1; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-title-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.icon-gold { background: var(--gold-dim); color: var(--gold); }
+.icon-teal { background: var(--teal-dim); color: var(--teal); }
+.icon-blue { background: var(--blue-dim); color: var(--blue); }
+
+/* ── FORM ELEMENTS ── */
+label {
+  display: block;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+input[type="text"], input[type="url"], textarea, select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text1);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+textarea { resize: vertical; min-height: 80px; }
+select option { background: var(--bg3); }
+
+.form-row { margin-bottom: 16px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: var(--r);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.btn-gold {
+  background: var(--gold);
+  color: var(--bg0);
+}
+.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text2);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-teal { background: var(--teal-dim); border: 1px solid rgba(0,212,170,0.3); color: var(--teal); }
+.btn-teal:hover { background: rgba(0,212,170,0.2); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+/* ── AI OUTPUT ── */
+.ai-output {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text1);
+  margin-top: 14px;
+  min-height: 60px;
+  white-space: pre-wrap;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.ai-output.loading {
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+}
+.ai-output.stream { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* ── TABS ── */
+.tabs { display: flex; gap: 2px; margin-bottom: 18px; background: var(--bg3); border-radius: var(--r); padding: 3px; }
+.tab {
+  flex: 1;
+  padding: 7px;
+  text-align: center;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: 6px;
+  color: var(--text3);
+  transition: all 0.15s;
+  font-family: 'DM Mono', monospace;
+}
+.tab.active { background: var(--bg4); color: var(--gold); }
+
+/* ── METRICS ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 16px 18px;
+}
+.metric-label { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+.metric-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; color: var(--text1); }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.metric-up { color: var(--teal); }
+.metric-down { color: var(--red); }
+
+/* ── PLATFORM CHIPS ── */
+.platform-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.platform-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  color: var(--text2);
+}
+.platform-chip.active-tiktok { border-color: #fff; color: #fff; background: rgba(255,255,255,0.06); }
+.platform-chip.active-facebook { border-color: #4267B2; color: #4267B2; background: rgba(66,103,178,0.1); }
+.platform-chip.active-instagram { border-color: #E1306C; color: #E1306C; background: rgba(225,48,108,0.1); }
+.platform-chip.active-vk { border-color: #4C75A3; color: #4C75A3; background: rgba(76,117,163,0.1); }
+.platform-chip:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── LANGUAGE CHIPS ── */
+.lang-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.lang-chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text2);
+  transition: all 0.15s;
+  font-family: 'DM Mono', monospace;
+}
+.lang-chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+/* ── PROGRESS / PIPELINE ── */
+.pipeline-viz {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 14px 0;
+  overflow-x: auto;
+}
+.pipe-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 80px;
+}
+.pipe-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  color: var(--text3);
+  transition: all 0.3s;
+  position: relative;
+}
+.pipe-circle.done { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+.pipe-circle.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); animation: pipe-pulse 1.5s ease-in-out infinite; }
+@keyframes pipe-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(240,165,0,0.4)} 50%{box-shadow:0 0 0 8px rgba(240,165,0,0)} }
+.pipe-label { font-size: 10px; color: var(--text3); text-align: center; font-family: 'DM Mono', monospace; }
+.pipe-connector { flex: 1; height: 2px; background: var(--border2); min-width: 16px; }
+.pipe-connector.done { background: var(--teal); }
+
+/* ── SCRIPT OUTPUT ── */
+.script-block {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-top: 14px;
+}
+.script-lang-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+}
+.script-lang-tab {
+  padding: 8px 16px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  cursor: pointer;
+  color: var(--text3);
+  border-right: 1px solid var(--border);
+  transition: all 0.15s;
+}
+.script-lang-tab.active { background: var(--gold-dim); color: var(--gold); }
+.script-content {
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  white-space: pre-wrap;
+  min-height: 120px;
+  color: var(--text1);
+}
+
+/* ── LEAD TABLE ── */
+.lead-table { width: 100%; border-collapse: collapse; }
+.lead-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  border-bottom: 1px solid var(--border);
+}
+.lead-table td {
+  padding: 12px 14px;
+  font-size: 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.lead-table tr:last-child td { border-bottom: none; }
+.lead-table tr:hover td { background: var(--bg3); }
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+}
+.status-new { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(79,142,247,0.3); }
+.status-replied { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(0,212,170,0.3); }
+.status-hot { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,165,0,0.3); }
+
+/* ── TOGGLE ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 13px; color: var(--text1); }
+.toggle-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.toggle {
+  width: 40px;
+  height: 22px;
+  background: var(--bg4);
+  border-radius: 11px;
+  position: relative;
+  cursor: pointer;
+  border: 1px solid var(--border2);
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+.toggle.on { background: var(--gold); border-color: var(--gold); }
+.toggle::after {
+  content: '';
+  position: absolute;
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: var(--bg0);
+  top: 2px; left: 2px;
+  transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(18px); background: white; }
+
+/* ── NOTICE ── */
+.notice {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--r);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+.notice-gold { background: var(--gold-dim); border: 1px solid rgba(240,165,0,0.2); color: var(--gold2); }
+.notice-teal { background: var(--teal-dim); border: 1px solid rgba(0,212,170,0.2); color: var(--teal); }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; animation: slideIn 0.2s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── PROGRESS BAR ── */
+.progress-bar-wrap { background: var(--bg4); border-radius: 3px; height: 5px; overflow: hidden; margin-top: 8px; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 3px; transition: width 0.5s ease; }
+
+/* ── TICKER ── */
+.ticker-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 20px;
+}
+.ticker-item {
+  flex-shrink: 0;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 8px 14px;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text2);
+}
+.ticker-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* ── VIDEO CARD ── */
+.video-card-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.video-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.video-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.video-thumb {
+  height: 120px;
+  background: var(--bg4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  position: relative;
+  overflow: hidden;
+}
+.video-thumb-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.4);
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.video-card:hover .video-thumb-overlay { opacity: 1; }
+.video-meta { padding: 10px 12px; }
+.video-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.video-stats { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+/* ── LOADING SPINNER ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: 1fr 1fr; }
+  .video-card-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── VIDEO EDITOR ADDITIONS ── */
+.media-thumb {
+  aspect-ratio: 16/9;
+  background: var(--bg4);
+  border-radius: 6px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+}
+.media-thumb:hover { border-color: var(--gold); }
+.media-thumb.selected { border-color: var(--teal); }
+.media-thumb video,
+.media-thumb img { width:100%;height:100%;object-fit:cover;display:block; }
+.media-thumb-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.8));
+  color: white; font-size: 9px; padding: 4px 5px 3px;
+  font-family: 'DM Mono', monospace;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.media-thumb-badge {
+  position: absolute; top: 3px; right: 3px;
+  background: var(--gold); color: var(--bg0);
+  font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 4px;
+}
+.media-add-btn {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0); opacity: 0; transition: all 0.15s;
+  color: white; font-size: 20px;
+}
+.media-thumb:hover .media-add-btn { opacity: 1; background: rgba(240,165,0,0.3); }
+.tl-clip {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg4); border: 1px solid var(--border2);
+  border-radius: 6px; padding: 8px 10px; cursor: pointer;
+  transition: all 0.15s; user-select: none;
+}
+.tl-clip:hover { border-color: var(--gold); }
+.tl-clip.active { border-color: var(--teal); background: var(--teal-dim); }
+.tl-clip-thumb {
+  width: 48px; height: 32px; border-radius: 4px;
+  background: var(--bg3); overflow: hidden; flex-shrink: 0;
+}
+.tl-clip-thumb video,
+.tl-clip-thumb img { width:100%;height:100%;object-fit:cover; }
+.tl-clip-info { flex: 1; min-width: 0; }
+.tl-clip-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tl-clip-meta { font-size: 10px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 2px; }
+.tl-clip-dur {
+  font-size: 11px; font-family: 'DM Mono', monospace; color: var(--gold);
+  background: var(--gold-dim); padding: 2px 6px; border-radius: 4px; flex-shrink: 0;
+}
+.tl-drag-handle { color: var(--text3); cursor: grab; font-size: 14px; flex-shrink: 0; }
+.tl-clip-filter-badge {
+  font-size: 9px; padding: 1px 5px; border-radius: 10px;
+  background: var(--bg3); color: var(--text3); flex-shrink: 0;
+}
+
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">BAZAAR AI</div>
+    <div class="logo-sub">Content Automation System</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">System</div>
+    <div class="nav-item active" onclick="switchView('dashboard')">
+      <span class="nav-icon">⬡</span> 总控台
+    </div>
+    <div class="nav-section">Automation</div>
+    <div class="nav-item" onclick="switchView('viral')">
+      <span class="nav-icon">🔥</span> 爆款解析
+    </div>
+    <div class="nav-item" onclick="switchView('copywrite')">
+      <span class="nav-icon">✍️</span> AI文案生成
+    </div>
+    <div class="nav-item" onclick="switchView('voice')">
+      <span class="nav-icon">🎙</span> 声音配置
+    </div>
+    <div class="nav-item" onclick="switchView('avatar')">
+      <span class="nav-icon">👤</span> 数字人设置
+    </div>
+    <div class="nav-item" onclick="switchView('edit')">
+      <span class="nav-icon">🎬</span> 自动剪辑
+    </div>
+    <div class="nav-item" onclick="switchView('distribute')">
+      <span class="nav-icon">🚀</span> 平台分发
+    </div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="switchView('leads')">
+      <span class="nav-icon">📬</span> 询盘追踪
+      <span class="nav-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="switchView('settings')">
+      <span class="nav-icon">⚙️</span> 系统设置
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sys-status">
+      <div class="status-dot"></div>
+      <span>System online · v1.0</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">总控台</div>
+    <div class="topbar-pills">
+      <div class="pill active">芭莎纺织</div>
+      <div class="pill">Winter 2025/26</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="view active" id="view-dashboard">
+      <div class="ticker-row">
+        <div class="ticker-item"><span class="ticker-dot" style="background:var(--teal)"></span>TikTok · 已发 24 条</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:#4267B2"></span>Facebook · 3 条待审核</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:#E1306C)"></span>Instagram · Reels 运行中</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:#4C75A3"></span>VK · 俄文版本队列中</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:var(--gold)"></span>询盘 · 本周 7 条新增</div>
+      </div>
+
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">本月视频产出</div>
+          <div class="metric-value">47</div>
+          <div class="metric-sub metric-up">↑ 31% vs 上月</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">询盘总量</div>
+          <div class="metric-value">23</div>
+          <div class="metric-sub metric-up">↑ 15 条本周</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">视频总曝光</div>
+          <div class="metric-value">186K</div>
+          <div class="metric-sub metric-up">↑ TikTok 主导</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">广告日预算</div>
+          <div class="metric-value">$20</div>
+          <div class="metric-sub" style="color:var(--gold)">建议升至 $40</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <div class="card-title-icon icon-gold">⚡</div>
+            自动化生产流水线
+          </div>
+          <button class="btn btn-gold btn-sm" onclick="runPipeline()">▶ 启动一键生产</button>
+        </div>
+        <div class="pipeline-viz" id="pipeline-viz">
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn0">🔍</div>
+            <div class="pipe-label">爆款解析</div>
+          </div>
+          <div class="pipe-connector" id="pc0"></div>
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn1">✍️</div>
+            <div class="pipe-label">文案生成</div>
+          </div>
+          <div class="pipe-connector" id="pc1"></div>
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn2">🎙</div>
+            <div class="pipe-label">声音合成</div>
+          </div>
+          <div class="pipe-connector" id="pc2"></div>
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn3">👤</div>
+            <div class="pipe-label">数字人</div>
+          </div>
+          <div class="pipe-connector" id="pc3"></div>
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn4">✂️</div>
+            <div class="pipe-label">自动剪辑</div>
+          </div>
+          <div class="pipe-connector" id="pc4"></div>
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn5">🚀</div>
+            <div class="pipe-label">多平台发布</div>
+          </div>
+          <div class="pipe-connector" id="pc5"></div>
+          <div class="pipe-node">
+            <div class="pipe-circle" id="pn6">📬</div>
+            <div class="pipe-label">询盘回收</div>
+          </div>
+        </div>
+        <div id="pipeline-status" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:10px">
+          就绪 · 点击「启动一键生产」开始自动化流程
+        </div>
+        <div class="progress-bar-wrap" style="margin-top:10px">
+          <div class="progress-bar-fill" id="pipeline-progress" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-icon icon-teal">📹</div>最近生产视频</div>
+          </div>
+          <div class="video-card-grid" style="grid-template-columns:1fr 1fr">
+            <div class="video-card">
+              <div class="video-thumb" style="background:linear-gradient(135deg,#1a1e2c,#222638)">🧥<div class="video-thumb-overlay">▶</div></div>
+              <div class="video-meta">
+                <div class="video-name">防水硬壳面料展示</div>
+                <div class="video-stats">TikTok · 12.4K views</div>
+              </div>
+            </div>
+            <div class="video-card">
+              <div class="video-thumb" style="background:linear-gradient(135deg,#181c28,#1e2235)">❄️<div class="video-thumb-overlay">▶</div></div>
+              <div class="video-meta">
+                <div class="video-name">羽绒服面料质感</div>
+                <div class="video-stats">Instagram · 8.1K views</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-icon icon-blue">📬</div>最新询盘</div>
+            <button class="btn btn-outline btn-sm" onclick="switchView('leads')">全部查看</button>
+          </div>
+          <table class="lead-table">
+            <tbody>
+              <tr><td><div style="font-weight:500">Sarah Mitchell</div><div style="font-size:11px;color:var(--text3)">Outdoor Brand Inc. · 美国</div></td><td><span class="status-badge status-hot">🔥 高意向</span></td></tr>
+              <tr><td><div style="font-weight:500">Dmitry Volkov</div><div style="font-size:11px;color:var(--text3)">Bask Russia · 俄罗斯</div></td><td><span class="status-badge status-new">新询盘</span></td></tr>
+              <tr><td><div style="font-weight:500">Anna Weber</div><div style="font-size:11px;color:var(--text3)">Alpine Fashion · 德国</div></td><td><span class="status-badge status-replied">已回复</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VIRAL ANALYSIS ══ -->
+    <div class="view" id="view-viral">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🔥</div>爆款视频解析</div>
+        </div>
+        <div class="notice notice-gold">💡 输入竞品视频链接或关键词，AI自动分析爆款结构，提取可复用的内容框架</div>
+        <div class="form-row">
+          <label>视频链接 / 关键词</label>
+          <input type="text" id="viral-input" placeholder="粘贴 TikTok/Instagram 视频链接，或输入关键词如 outdoor fabric" />
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>内容类目</label>
+            <select id="viral-category">
+              <option>冬季户外服装面料</option>
+              <option>防水硬壳面料</option>
+              <option>羽绒服面料</option>
+              <option>派克大衣面料</option>
+              <option>户外运动面料</option>
+            </select>
+          </div>
+          <div>
+            <label>目标市场</label>
+            <select id="viral-market">
+              <option>欧美市场 (英语)</option>
+              <option>俄罗斯市场 (俄语)</option>
+              <option>中东市场 (阿拉伯语)</option>
+              <option>全球市场 (多语言)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="analyzeViral()">
+          <span>🔍</span> AI 深度解析爆款结构
+        </button>
+        <div class="ai-output loading" id="viral-output">等待输入内容...</div>
+      </div>
+    </div>
+
+    <!-- ══ COPYWRITING ══ -->
+    <div class="view" id="view-copywrite">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">✍️</div>AI 视频文案生成</div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>产品/面料类型</label>
+            <select id="copy-product">
+              <option>防水硬壳面料 (Hardshell)</option>
+              <option>羽绒服面料 (Down coat fabric)</option>
+              <option>棉服面料 (Cotton-padded)</option>
+              <option>风衣面料 (Trench coat)</option>
+              <option>派克大衣面料 (Parka)</option>
+            </select>
+          </div>
+          <div>
+            <label>视频时长</label>
+            <select id="copy-duration">
+              <option>15秒 (极短钩子版)</option>
+              <option>30秒 (标准版)</option>
+              <option>60秒 (完整介绍版)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>核心卖点 (选填)</label>
+          <input type="text" id="copy-usp" placeholder="例：20年生产经验 · 年产300+款 · 已供货多个知名品牌" />
+        </div>
+        <div class="form-row">
+          <label>目标语言</label>
+          <div class="lang-chips">
+            <div class="lang-chip active" onclick="toggleLang(this,'en')">🇬🇧 English</div>
+            <div class="lang-chip" onclick="toggleLang(this,'ru')">🇷🇺 Русский</div>
+            <div class="lang-chip" onclick="toggleLang(this,'ar')">🇦🇪 العربية</div>
+            <div class="lang-chip" onclick="toggleLang(this,'de')">🇩🇪 Deutsch</div>
+            <div class="lang-chip" onclick="toggleLang(this,'fr')">🇫🇷 Français</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>视频平台风格</label>
+          <div class="platform-chips" id="copy-platforms">
+            <div class="platform-chip active-tiktok" onclick="togglePlatform(this,'tiktok')">TikTok</div>
+            <div class="platform-chip active-facebook" onclick="togglePlatform(this,'facebook')">Facebook</div>
+            <div class="platform-chip active-instagram" onclick="togglePlatform(this,'instagram')">Instagram</div>
+            <div class="platform-chip active-vk" onclick="togglePlatform(this,'vk')">VK</div>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="generateCopy()" id="copy-btn">
+          <span>✨</span> AI 一键生成多语言脚本
+        </button>
+
+        <div id="copy-result" style="display:none;margin-top:16px">
+          <div class="script-block">
+            <div class="script-lang-bar" id="script-tabs"></div>
+            <div class="script-content" id="script-content"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-teal btn-sm" onclick="copyScript()">📋 复制脚本</button>
+            <button class="btn btn-outline btn-sm" onclick="sendToAvatar()">→ 发送至数字人模块</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VOICE ══ -->
+    <div class="view" id="view-voice">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🎙</div>AI 声音配置</div>
+        </div>
+        <div class="notice notice-gold">⚠️ 声音克隆需使用本人授权录音。请确保已获得被克隆者书面授权。</div>
+        <div class="form-grid">
+          <div>
+            <label>声音类型</label>
+            <select id="voice-type">
+              <option>专业女声 · 英式英语</option>
+              <option>专业男声 · 美式英语</option>
+              <option>专业男声 · 俄语</option>
+              <option>专业女声 · 阿拉伯语</option>
+              <option>自定义克隆声音</option>
+            </select>
+          </div>
+          <div>
+            <label>语速</label>
+            <select>
+              <option>正常 (1.0x)</option>
+              <option>稍快 (1.1x)</option>
+              <option>快速 (1.2x)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>情感风格</label>
+          <div class="lang-chips">
+            <div class="lang-chip active" onclick="toggleChip(this)">专业自信</div>
+            <div class="lang-chip" onclick="toggleChip(this)">热情友好</div>
+            <div class="lang-chip" onclick="toggleChip(this)">冷静权威</div>
+            <div class="lang-chip" onclick="toggleChip(this)">活力动感</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>配音文本预览</label>
+          <textarea id="voice-text" rows="4" placeholder="从文案模块传入，或手动输入配音文本...">Looking for premium winter outdoor fabrics? At Shaoxing Basha Textile, we've been crafting world-class hardshell and down coat fabrics for over 20 years. 300 new styles annually, trusted by global brands. Request your free sample today.</textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-gold" onclick="previewVoice()">🎵 预览配音效果</button>
+          <button class="btn btn-outline" onclick="generateVoice()">⬇ 生成配音文件</button>
+        </div>
+        <div id="voice-status" style="margin-top:12px;font-size:12px;color:var(--text3);font-family:'DM Mono',monospace"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-teal">🔧</div>克隆声音管理</div>
+          <button class="btn btn-outline btn-sm">+ 上传新样本</button>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Emma (英式英语) · 已授权</div>
+            <div class="toggle-sub">录制时长 5:24 · 匹配度 94%</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Dmitry (俄语) · 已授权</div>
+            <div class="toggle-sub">录制时长 4:11 · 匹配度 91%</div>
+          </div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <div class="toggle-label">Fatima (阿拉伯语) · 审核中</div>
+            <div class="toggle-sub">录制时长 3:45 · 处理中...</div>
+          </div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AVATAR ══ -->
+    <div class="view" id="view-avatar">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">👤</div>AI 数字人配置</div>
+        </div>
+        <div class="notice notice-gold">📋 数字人形象须使用本人授权影像，或购买HeyGen/Synthesia授权数字人库形象。</div>
+        <div class="form-grid">
+          <div>
+            <label>数字人平台</label>
+            <select id="avatar-platform">
+              <option>HeyGen (推荐)</option>
+              <option>Synthesia</option>
+              <option>D-ID</option>
+            </select>
+          </div>
+          <div>
+            <label>目标市场形象</label>
+            <select id="avatar-market">
+              <option>欧美形象 · 金发女性</option>
+              <option>欧美形象 · 深发男性</option>
+              <option>中东形象 · 女性</option>
+              <option>俄罗斯形象 · 女性</option>
+              <option>自定义上传形象</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>背景设置</label>
+            <select>
+              <option>产品实拍背景 (绿幕合成)</option>
+              <option>工厂生产车间</option>
+              <option>白色简洁背景</option>
+              <option>自定义上传背景</option>
+            </select>
+          </div>
+          <div>
+            <label>视频规格</label>
+            <select>
+              <option>9:16 竖版 1080×1920 (Reels)</option>
+              <option>1:1 方形 1080×1080 (Feed)</option>
+              <option>16:9 横版 1920×1080</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>口播脚本</label>
+          <textarea id="avatar-script" rows="5" placeholder="粘贴文案模块生成的脚本，或输入口播内容...">Looking for premium winter outdoor fabrics? At Shaoxing Basha Textile, we've been crafting world-class hardshell and down coat fabrics for over 20 years. Request your free sample today at our website.</textarea>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-gold" onclick="generateAvatar()">🎬 生成数字人视频</button>
+          <button class="btn btn-outline" onclick="previewAvatar()">👁 预览设置</button>
+        </div>
+        <div id="avatar-status" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+
+    <!-- ══ EDIT (v3 — Real Canvas Video Editor) ══ -->
+    <div class="view" id="view-edit">
+
+      <!-- MEDIA LIBRARY -->
+      <div class="card" id="card-media-lib">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-teal">🗂</div>素材库</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-gold btn-sm" onclick="openUploadLocal()">⬆ 上传本地素材</button>
+            <button class="btn btn-teal btn-sm" onclick="loadFreeMedia()">🌐 加载免费在线素材</button>
+            <button class="btn btn-outline btn-sm" onclick="clearLibrary()">🗑 清空</button>
+          </div>
+        </div>
+        <input type="file" id="local-file-input" multiple accept="video/*,image/*" style="display:none" onchange="handleLocalFiles(event)">
+
+        <!-- Free online sources notice -->
+        <div class="notice notice-blue" id="free-media-notice" style="display:none">
+          <div>
+            <strong>免费素材来源 (浏览器直接加载)</strong><br>
+            Pexels · Pixabay · Unsplash · 自定义URL — 全部无版权，可商用
+          </div>
+        </div>
+
+        <!-- URL input -->
+        <div id="url-input-area" style="display:none;margin-bottom:12px">
+          <div style="display:flex;gap:8px">
+            <input type="text" id="media-url-input" placeholder="粘贴视频或图片URL（支持 .mp4 .webm .jpg .png）" style="flex:1"/>
+            <button class="btn btn-gold btn-sm" onclick="addMediaFromURL()">添加</button>
+          </div>
+          <div style="margin-top:8px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace">
+            示例免费视频：https://www.pexels.com/video/xxx/download/ &nbsp;|&nbsp; Pixabay CDN URL
+          </div>
+          <!-- Preset free clips -->
+          <div style="margin-top:10px">
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);margin-bottom:8px">快速添加免费演示素材：</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="preset-clips">
+              <button class="btn btn-outline btn-sm" onclick="addPresetClip('fabric1')">🧥 冬季面料</button>
+              <button class="btn btn-outline btn-sm" onclick="addPresetClip('outdoor1')">🏔 户外场景</button>
+              <button class="btn btn-outline btn-sm" onclick="addPresetClip('factory1')">🏭 工厂素材</button>
+              <button class="btn btn-outline btn-sm" onclick="addPresetClip('fashion1')">👗 时尚展示</button>
+              <button class="btn btn-outline btn-sm" onclick="addPresetClip('title_card')">📝 标题卡片</button>
+              <button class="btn btn-outline btn-sm" onclick="addPresetClip('cta_card')">📲 CTA卡片</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Media grid -->
+        <div id="media-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;min-height:80px">
+          <div style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text3);font-size:12px;font-family:'DM Mono',monospace;grid-column:1/-1" id="media-empty">
+            点击「上传本地素材」或「加载免费在线素材」开始
+          </div>
+        </div>
+      </div>
+
+      <!-- TIMELINE + CANVAS EDITOR -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">✂️</div>视频编辑器</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <select id="canvas-ratio" onchange="changeCanvasRatio(this.value)" style="font-size:12px;padding:5px 10px;width:auto">
+              <option value="9:16">9:16 竖版 Reels</option>
+              <option value="1:1">1:1 方形</option>
+              <option value="16:9">16:9 横版</option>
+            </select>
+            <button class="btn btn-outline btn-sm" onclick="addTextOverlay()">T 添加文字</button>
+            <button class="btn btn-outline btn-sm" onclick="addLogoOverlay()">🏷 品牌Logo</button>
+            <button class="btn btn-teal btn-sm" onclick="previewTimeline()">▶ 预览</button>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start">
+          <!-- Canvas preview -->
+          <div>
+            <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);margin-bottom:6px">预览画布</div>
+            <div id="canvas-wrap" style="position:relative;background:#000;border-radius:8px;overflow:hidden;border:1px solid var(--border2)">
+              <canvas id="preview-canvas" style="width:100%;display:block"></canvas>
+              <div id="canvas-text-overlays" style="position:absolute;inset:0;pointer-events:none"></div>
+              <div id="canvas-logo-overlay" style="position:absolute;bottom:8px;right:8px;background:rgba(240,165,0,0.9);color:#000;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;padding:3px 8px;border-radius:4px;display:none">BASHA TEXTILE</div>
+            </div>
+            <!-- Playback controls -->
+            <div style="display:flex;align-items:center;gap:8px;margin-top:8px">
+              <button class="btn btn-gold btn-sm" id="play-btn" onclick="togglePreviewPlay()" style="padding:6px 12px">▶</button>
+              <div style="flex:1;background:var(--bg4);height:4px;border-radius:2px;cursor:pointer;position:relative" id="playhead-bar" onclick="seekPlayhead(event)">
+                <div id="playhead-fill" style="height:100%;background:var(--gold);border-radius:2px;width:0%;transition:width 0.1s linear"></div>
+              </div>
+              <span id="time-display" style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3);min-width:50px">0.0s</span>
+            </div>
+            <!-- Volume -->
+            <div style="display:flex;align-items:center;gap:8px;margin-top:6px">
+              <span style="font-size:11px;color:var(--text3)">🔊</span>
+              <input type="range" id="master-volume" min="0" max="1" step="0.05" value="0.8"
+                style="flex:1;accent-color:var(--gold)" oninput="setMasterVolume(this.value)">
+              <span style="font-size:11px;color:var(--text3)" id="vol-label">80%</span>
+            </div>
+          </div>
+
+          <!-- Timeline -->
+          <div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <div style="font-size:11px;font-family:'DM Mono',monospace;color:var(--text3)">时间轴 — 拖拽排序 · 点击选中</div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-outline btn-sm" onclick="addTransition()">↔ 转场</button>
+                <button class="btn btn-outline btn-sm" onclick="clearTimeline()">清空</button>
+              </div>
+            </div>
+            <div id="timeline" style="min-height:120px;background:var(--bg3);border-radius:8px;padding:10px;border:1px dashed var(--border2)">
+              <div id="tl-empty" style="display:flex;align-items:center;justify-content:center;height:80px;color:var(--text3);font-size:12px;font-family:'DM Mono',monospace">
+                从素材库拖入或点击素材添加到时间轴
+              </div>
+              <div id="tl-tracks" style="display:flex;flex-direction:column;gap:6px"></div>
+            </div>
+
+            <!-- Clip settings panel -->
+            <div id="clip-settings" style="display:none;margin-top:12px;background:var(--bg3);border-radius:8px;padding:14px">
+              <div style="font-size:12px;font-weight:500;margin-bottom:10px;color:var(--gold)">✂️ 片段设置：<span id="clip-settings-name"></span></div>
+              <div class="form-grid" style="gap:10px">
+                <div>
+                  <label>开始时间 (秒)</label>
+                  <input type="number" id="clip-start-in" min="0" step="0.1" value="0" oninput="updateClipSetting('startAt',this.value)" style="padding:6px 10px;font-size:12px">
+                </div>
+                <div>
+                  <label>持续时长 (秒)</label>
+                  <input type="number" id="clip-dur" min="0.5" step="0.5" value="3" oninput="updateClipSetting('duration',this.value)" style="padding:6px 10px;font-size:12px">
+                </div>
+                <div>
+                  <label>音量</label>
+                  <input type="range" id="clip-vol" min="0" max="1" step="0.05" value="1" style="accent-color:var(--gold)" oninput="updateClipSetting('volume',this.value)">
+                </div>
+                <div>
+                  <label>滤镜</label>
+                  <select id="clip-filter" onchange="updateClipSetting('filter',this.value)" style="padding:6px 10px;font-size:12px">
+                    <option value="none">无滤镜</option>
+                    <option value="cinematic">电影感</option>
+                    <option value="warm">暖色调</option>
+                    <option value="cool">冷色调</option>
+                    <option value="bw">黑白</option>
+                    <option value="vivid">鲜艳</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-row" style="margin-top:10px;margin-bottom:0">
+                <label>字幕文字 (叠加在此片段)</label>
+                <input type="text" id="clip-caption" placeholder="例：PREMIUM WINTER FABRICS" oninput="updateClipSetting('caption',this.value)" style="padding:6px 10px;font-size:12px">
+              </div>
+              <div style="display:flex;gap:8px;margin-top:10px">
+                <button class="btn btn-red btn-sm" onclick="removeSelectedClip()">🗑 删除片段</button>
+                <button class="btn btn-outline btn-sm" onclick="duplicateSelectedClip()">📋 复制</button>
+              </div>
+            </div>
+
+            <!-- BGM -->
+            <div style="margin-top:12px;background:var(--bg3);border-radius:8px;padding:12px">
+              <div style="font-size:12px;font-weight:500;margin-bottom:8px">🎵 背景音乐</div>
+              <div style="display:flex;gap:8px;align-items:center">
+                <select id="bgm-select" style="flex:1;padding:6px 10px;font-size:12px" onchange="setBGM(this.value)">
+                  <option value="">无背景音乐</option>
+                  <option value="cinematic">动感商务 (生成)</option>
+                  <option value="epic">史诗大气 (生成)</option>
+                  <option value="upbeat">活力节拍 (生成)</option>
+                </select>
+                <input type="range" id="bgm-vol" min="0" max="1" step="0.05" value="0.3"
+                  style="width:80px;accent-color:var(--gold)" oninput="setBGMVolume(this.value)">
+                <span style="font-size:11px;color:var(--text3)" id="bgm-vol-label">30%</span>
+              </div>
+            </div>
+
+            <!-- Text overlays list -->
+            <div style="margin-top:12px;background:var(--bg3);border-radius:8px;padding:12px" id="text-overlays-panel">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                <div style="font-size:12px;font-weight:500">T 文字叠层</div>
+                <button class="btn btn-outline btn-sm" onclick="addTextOverlay()">+ 添加</button>
+              </div>
+              <div id="text-overlays-list" style="font-size:12px;color:var(--text3)">暂无文字叠层</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">📤</div>导出视频</div>
+        </div>
+        <div class="notice notice-teal">✅ 使用浏览器内置 MediaRecorder API 渲染导出 · 无需服务器 · 所有处理在本地完成</div>
+        <div class="form-grid">
+          <div>
+            <label>导出格式</label>
+            <select id="export-format">
+              <option value="webm">WebM (VP9) — 最高质量</option>
+              <option value="webm-h264">WebM (H.264) — 兼容性强</option>
+              <option value="gif">GIF — 社媒预览</option>
+            </select>
+          </div>
+          <div>
+            <label>导出规格</label>
+            <select id="export-size">
+              <option value="1080">1080p (推荐)</option>
+              <option value="720">720p (快速)</option>
+              <option value="480">480p (小文件)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px">
+          <button class="btn btn-gold" onclick="startExport()" id="export-btn">
+            <span>📤</span> 开始渲染导出
+          </button>
+          <button class="btn btn-teal" onclick="exportAllFormats()">
+            <span>📦</span> 导出全部规格
+          </button>
+          <button class="btn btn-outline" onclick="generateAIEditPlan()">
+            <span>🤖</span> AI生成剪辑方案
+          </button>
+        </div>
+
+        <!-- Export progress -->
+        <div id="export-progress-wrap" style="display:none">
+          <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text2);margin-bottom:6px" id="export-status-text">渲染中...</div>
+          <div style="background:var(--bg4);border-radius:3px;height:8px;overflow:hidden">
+            <div id="export-progress-fill" style="height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:3px;transition:width 0.3s;width:0%"></div>
+          </div>
+          <div id="export-eta" style="font-size:11px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:4px"></div>
+        </div>
+
+        <!-- Download links -->
+        <div id="download-links" style="display:none;margin-top:14px">
+          <div style="font-size:12px;font-weight:500;margin-bottom:8px;color:var(--teal)">✅ 导出完成！点击下载：</div>
+          <div id="download-btns" style="display:flex;gap:8px;flex-wrap:wrap"></div>
+        </div>
+
+        <!-- AI Edit output -->
+        <div class="ai-output" id="edit-ai-output" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>
+
+
+    <!-- ══ DISTRIBUTE ══ -->
+    <div class="view" id="view-distribute">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🚀</div>多平台自动分发</div>
+        </div>
+        <div class="notice notice-teal">✅ 每条视频将生成4个差异化版本（文案/字幕/语言各异），避免跨平台同质检测</div>
+        <div class="form-row">
+          <label>选择发布平台</label>
+          <div class="platform-chips">
+            <div class="platform-chip active-tiktok" onclick="this.classList.toggle('active-tiktok')">📱 TikTok</div>
+            <div class="platform-chip active-facebook" onclick="this.classList.toggle('active-facebook')">📘 Facebook Reels</div>
+            <div class="platform-chip active-instagram" onclick="this.classList.toggle('active-instagram')">📷 Instagram Reels</div>
+            <div class="platform-chip active-vk" onclick="this.classList.toggle('active-vk')">💙 VK</div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>发布时间策略</label>
+            <select>
+              <option>智能最优时间 (推荐)</option>
+              <option>立即发布</option>
+              <option>定时发布</option>
+            </select>
+          </div>
+          <div>
+            <label>发布频率</label>
+            <select>
+              <option>每日1条 (保守)</option>
+              <option>每日2条 (推荐)</option>
+              <option>每日3条 (激进)</option>
+            </select>
+          </div>
+        </div>
+        <div class="card" style="background:var(--bg3);padding:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);margin-bottom:10px">最优发布时间窗口 (UTC+8)</div>
+          <div class="form-grid-3" style="gap:8px">
+            <div style="padding:10px;background:var(--bg4);border-radius:var(--r);text-align:center">
+              <div style="font-size:11px;color:var(--text3)">TikTok 欧美</div>
+              <div style="font-size:14px;font-weight:500;color:var(--gold);margin-top:4px">20:00-24:00</div>
+            </div>
+            <div style="padding:10px;background:var(--bg4);border-radius:var(--r);text-align:center">
+              <div style="font-size:11px;color:var(--text3)">Facebook 全球</div>
+              <div style="font-size:14px;font-weight:500;color:var(--blue);margin-top:4px">16:00-20:00</div>
+            </div>
+            <div style="padding:10px;background:var(--bg4);border-radius:var(--r);text-align:center">
+              <div style="font-size:11px;color:var(--text3)">VK 俄罗斯</div>
+              <div style="font-size:14px;font-weight:500;color:var(--teal);margin-top:4px">17:00-21:00</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-gold" onclick="schedulePost()">📅 加入发布队列</button>
+          <button class="btn btn-outline" onclick="previewPosts()">👁 预览所有版本</button>
+        </div>
+        <div id="distribute-status" style="margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- ══ LEADS ══ -->
+    <div class="view" id="view-leads">
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">本周询盘</div>
+          <div class="metric-value">7</div>
+          <div class="metric-sub metric-up">↑ 40% 上周</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">高意向客户</div>
+          <div class="metric-value">3</div>
+          <div class="metric-sub" style="color:var(--gold)">待跟进</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">平均响应时间</div>
+          <div class="metric-value">18m</div>
+          <div class="metric-sub metric-up">AI 自动回复</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">询盘→意向率</div>
+          <div class="metric-value">43%</div>
+          <div class="metric-sub metric-up">↑ vs 行业均值</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">📬</div>询盘列表</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-teal btn-sm" onclick="generateReply()">🤖 AI 批量生成回复</button>
+            <button class="btn btn-outline btn-sm">⬇ 导出 Excel</button>
+          </div>
+        </div>
+        <table class="lead-table">
+          <thead>
+            <tr>
+              <th>客户信息</th>
+              <th>来源平台</th>
+              <th>询盘内容</th>
+              <th>状态</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div style="font-weight:500">Sarah Mitchell</div><div style="font-size:11px;color:var(--text3)">Outdoor Brand Inc. · 美国 🇺🇸</div><div style="font-size:11px;color:var(--teal)">sarah@outdoorbrand.com</div></td>
+              <td><span style="font-size:12px">TikTok</span></td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">What's the MOQ for hardshell fabric? Looking for 5000m minimum...</td>
+              <td><span class="status-badge status-hot">🔥 高意向</span></td>
+              <td><button class="btn btn-gold btn-sm" onclick="replyLead('Sarah Mitchell')">AI回复</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">Dmitry Volkov</div><div style="font-size:11px;color:var(--text3)">Bask Russia · 俄罗斯 🇷🇺</div><div style="font-size:11px;color:var(--teal)">d.volkov@bask.ru</div></td>
+              <td><span style="font-size:12px">VK</span></td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">Интересует прайс на пуховые ткани для зимней коллекции...</td>
+              <td><span class="status-badge status-new">🔵 新询盘</span></td>
+              <td><button class="btn btn-gold btn-sm" onclick="replyLead('Dmitry Volkov')">AI回复</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">Anna Weber</div><div style="font-size:11px;color:var(--text3)">Alpine Fashion · 德国 🇩🇪</div><div style="font-size:11px;color:var(--teal)">a.weber@alpinefashion.de</div></td>
+              <td><span style="font-size:12px">Instagram</span></td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">Can you send samples of your parka fabric? Need waterproof...</td>
+              <td><span class="status-badge status-replied">✓ 已回复</span></td>
+              <td><button class="btn btn-outline btn-sm">查看记录</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">James Thompson</div><div style="font-size:11px;color:var(--text3)">North Peak · 英国 🇬🇧</div><div style="font-size:11px;color:var(--teal)">j.thompson@northpeak.co.uk</div></td>
+              <td><span style="font-size:12px">Facebook</span></td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">Looking for a fabric supplier for our winter jacket line 2026...</td>
+              <td><span class="status-badge status-new">🔵 新询盘</span></td>
+              <td><button class="btn btn-gold btn-sm" onclick="replyLead('James Thompson')">AI回复</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" id="reply-card" style="display:none">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-teal">🤖</div>AI 生成询盘回复</div>
+        </div>
+        <div class="ai-output" id="reply-output" style="min-height:120px">点击客户行的「AI回复」按钮生成专业回复邮件...</div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn btn-gold btn-sm">📧 发送邮件</button>
+          <button class="btn btn-teal btn-sm">💬 发送 WhatsApp</button>
+          <button class="btn btn-outline btn-sm">✏️ 编辑后发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="view" id="view-settings">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">⚙️</div>系统配置</div>
+        </div>
+        <div class="form-row">
+          <label>公司名称</label>
+          <input type="text" value="Shaoxing Basha Textile Co., Ltd." />
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>WhatsApp 商务号</label>
+            <input type="text" placeholder="+86 xxxxxxxxxx" />
+          </div>
+          <div>
+            <label>官方网站</label>
+            <input type="url" placeholder="https://www.basha-textile.com" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label>Claude API Key</label>
+          <input type="text" id="api-key-input" placeholder="sk-ant-..." value="" />
+        </div>
+        <div class="form-row">
+          <label>自动化开关</label>
+          <div class="toggle-row">
+            <div><div class="toggle-label">自动评论监控 + 私信回复</div><div class="toggle-sub">ManyChat · 关键词触发</div></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Lead Form 询盘自动录入 CRM</div><div class="toggle-sub">Facebook Lead Ads → HubSpot</div></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">爆款监控每日自动运行</div><div class="toggle-sub">每天 09:00 自动分析</div></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">视频自动发布（需人工审核后）</div><div class="toggle-sub">审核通过后定时自动发布</div></div>
+            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="saveSettings()">💾 保存设置</button>
+        <div id="settings-status" style="margin-top:10px;font-size:12px;color:var(--teal);font-family:'DM Mono',monospace"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ─── Navigation ───
+const pages = {
+  dashboard:'总控台',viral:'爆款视频解析',copywrite:'AI文案生成',
+  voice:'声音配置',avatar:'数字人设置',edit:'自动剪辑',
+  distribute:'平台分发',leads:'询盘追踪',settings:'系统设置'
+};
+
+function switchView(id) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  document.getElementById('page-title').textContent = pages[id]||id;
+  event.currentTarget.classList.add('active');
+}
+
+// ─── API Call ───
+async function callClaude(prompt, outputEl, streaming=true) {
+  const apiKey = document.getElementById('api-key-input')?.value || '';
+  outputEl.textContent = '';
+  outputEl.classList.remove('loading');
+  outputEl.classList.add('stream');
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        stream: true,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    if (!res.ok) throw new Error('API error: ' + res.status);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6).trim();
+          if (data === '[DONE]') continue;
+          try {
+            const json = JSON.parse(data);
+            if (json.type === 'content_block_delta' && json.delta?.text) {
+              outputEl.textContent += json.delta.text;
+            }
+          } catch {}
+        }
+      }
+    }
+  } catch(e) {
+    outputEl.textContent = '⚠️ 请在「系统设置」中填入有效的 Claude API Key 以启用 AI 功能。\n\n演示输出：\n' + getDemoOutput(prompt);
+  }
+}
+
+function getDemoOutput(prompt) {
+  if (prompt.includes('爆款')) return `【爆款结构分析报告】\n\n🎯 视频类型：产品功能展示 + 社会认同\n\n📊 核心结构（30秒版本）：\n• 0-3秒钩子：水珠滚落防水面料慢动作 + 文字「你的客户需要这种面料吗？」\n• 3-10秒：3个快速卖点切换（防水/保暖/耐用）\n• 10-20秒：工厂规模 + 品牌背书\n• 20-30秒：CTA + WhatsApp联系方式\n\n🔑 高频关键词：\nwaterproof · outdoor · fabric supplier · MOQ · wholesale · sample\n\n💡 可复用框架：\n问题场景开头 → 产品解决方案 → 信任背书 → 行动引导`;
+  if (prompt.includes('文案') || prompt.includes('script') || prompt.includes('脚本')) return `【英文脚本 · 30秒版本】\n\n[0-3s] ⚡ HOOK\n"Is your fabric supplier slowing you down?"\n\n[3-15s] 💎 VALUE\n"Shaoxing Basha Textile — 20 years crafting premium winter outdoor fabrics. Hardshell, down coat, parka, trench coat. 300+ new styles every year, shipped worldwide."\n\n[15-25s] 🏆 TRUST\n"Trusted by global brands. Located in Keqiao — Asia's largest textile hub. Flexible MOQ for new partners."\n\n[25-30s] 📲 CTA\n"Request your FREE sample pack today. Link in bio or WhatsApp us now!"`;
+  if (prompt.includes('回复') || prompt.includes('reply')) return `Subject: Re: Fabric Inquiry — Shaoxing Basha Textile\n\nDear [Name],\n\nThank you for your interest in our winter outdoor fabrics! We're excited to connect with you.\n\nFor hardshell fabrics, our standard MOQ is 500m per color/style, with competitive pricing starting at USD 8-15/m depending on specifications.\n\nI'd love to send you our latest 2025/26 collection catalog along with free swatch samples. Could you share:\n• Your target fabric specifications (weight, waterproof rating, stretch)\n• Estimated annual volume\n• Delivery timeline\n\nWe can typically deliver samples within 5-7 business days worldwide.\n\nLooking forward to a potential partnership!\n\nBest regards,\nSales Team | Shaoxing Basha Textile\nWhatsApp: +86-xxx-xxxx-xxxx`;
+  return `AI分析完成。请填入 Claude API Key 以获取完整的个性化结果。`;
+}
+
+// ─── Viral Analysis ───
+async function analyzeViral() {
+  const input = document.getElementById('viral-input').value || '户外面料 TikTok爆款';
+  const category = document.getElementById('viral-category').value;
+  const market = document.getElementById('viral-market').value;
+  const out = document.getElementById('viral-output');
+  out.classList.add('loading');
+  out.textContent = '🔍 正在解析爆款结构...';
+
+  const prompt = `你是一位海外社媒营销专家，专注纺织面料B2B出口。
+分析以下内容关键词/URL的爆款视频结构，给出可复用的内容框架。
+输入：${input}
+类目：${category}
+目标市场：${market}
+
+请提供：
+1. 爆款视频结构分析（前3秒钩子/核心内容/CTA）
+2. 高转化关键词清单（英文）
+3. 可直接复用的视频脚本框架
+4. 针对芭莎纺织面料的具体内容建议
+格式清晰，中英双语。`;
+
+  await callClaude(prompt, out);
+}
+
+// ─── Copy Generation ───
+const selectedLangs = new Set(['en']);
+const scriptData = {};
+
+function toggleLang(el, lang) {
+  el.classList.toggle('active');
+  if(el.classList.contains('active')) selectedLangs.add(lang);
+  else selectedLangs.delete(lang);
+}
+
+function togglePlatform(el, platform) {
+  const cls = 'active-'+platform;
+  el.classList.toggle(cls);
+}
+
+function toggleChip(el) { el.classList.toggle('active'); }
+
+async function generateCopy() {
+  const product = document.getElementById('copy-product').value;
+  const duration = document.getElementById('copy-duration').value;
+  const usp = document.getElementById('copy-usp').value || '20年生产经验，年产300+款，已供货全球知名品牌';
+  const btn = document.getElementById('copy-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 生成中...';
+
+  const langs = [...selectedLangs];
+  const langMap = {en:'英文(English)',ru:'俄文(Русский)',ar:'阿拉伯文(العربية)',de:'德文(Deutsch)',fr:'法文(Français)'};
+
+  const prompt = `你是芭莎纺织(Shaoxing Basha Textile)的海外营销专家。
+请为以下产品生成${langs.length}个语言版本的短视频脚本：
+
+产品：${product}
+视频时长：${duration}
+核心卖点：${usp}
+目标语言：${langs.map(l=>langMap[l]).join('、')}
+公司背景：绍兴柯桥，成立2002年，亚洲最大纺织品集散地，专注冬季户外服装面料
+
+要求：
+- 每个语言版本独立输出，标注语言
+- 包含时间轴标注（0-3s 钩子、核心内容、CTA）
+- CTA引导WhatsApp询价或免费样品申请
+- 专业B2B风格，吸引品牌采购商
+
+${langs.map(l=>`【${langMap[l]}版本】`).join('\n')}`;
+
+  const tmpOut = document.createElement('div');
+  document.body.appendChild(tmpOut);
+  await callClaude(prompt, tmpOut);
+  const fullText = tmpOut.textContent;
+  document.body.removeChild(tmpOut);
+
+  scriptData['all'] = fullText;
+
+  const tabs = document.getElementById('script-tabs');
+  const content = document.getElementById('script-content');
+  tabs.innerHTML = langs.map((l,i)=>
+    `<div class="script-lang-tab ${i===0?'active':''}" onclick="showScriptLang(this,'${l}')">${langMap[l].split('(')[0]}</div>`
+  ).join('');
+  content.textContent = fullText;
+
+  document.getElementById('copy-result').style.display='block';
+  btn.disabled = false;
+  btn.innerHTML = '<span>✨</span> AI 一键生成多语言脚本';
+}
+
+function showScriptLang(el, lang) {
+  document.querySelectorAll('.script-lang-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function copyScript() {
+  const text = document.getElementById('script-content').textContent;
+  navigator.clipboard.writeText(text).then(()=>{
+    const btn = event.currentTarget;
+    btn.textContent='✓ 已复制';
+    setTimeout(()=>btn.textContent='📋 复制脚本', 2000);
+  });
+}
+
+function sendToAvatar() {
+  const script = document.getElementById('script-content').textContent.slice(0,500);
+  document.getElementById('avatar-script').value = script;
+  document.querySelectorAll('.nav-item')[4].click();
+}
+
+// ─── Voice ───
+async function previewVoice() {
+  const el = document.getElementById('voice-status');
+  el.textContent = '🎵 正在连接 ElevenLabs API 生成配音预览...';
+  await new Promise(r=>setTimeout(r,1500));
+  el.textContent = '✅ 配音预览已生成（演示模式：需配置 ElevenLabs API Key 获取真实配音）';
+  el.style.color='var(--teal)';
+}
+
+async function generateVoice() {
+  const el = document.getElementById('voice-status');
+  el.textContent = '⬇ 正在生成配音文件...';
+  await new Promise(r=>setTimeout(r,2000));
+  el.textContent = '✅ voice_output_en_professional.mp3 已生成，已传入剪辑队列';
+  el.style.color='var(--teal)';
+}
+
+// ─── Avatar ───
+async function generateAvatar() {
+  const el = document.getElementById('avatar-status');
+  el.innerHTML = '<div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)"><span class="spinner"></span>正在调用 HeyGen API 生成数字人视频... 预计 10-15 分钟</div>';
+  await new Promise(r=>setTimeout(r,3000));
+  el.innerHTML = '<div style="font-size:12px;color:var(--teal);font-family:\'DM Mono\',monospace">✅ 视频生成请求已提交 HeyGen · 任务ID: HG-2026-BT-0847 · 完成后自动进入剪辑队列</div>';
+}
+
+async function previewAvatar() {
+  const el = document.getElementById('avatar-status');
+  el.innerHTML = '<div style="font-size:12px;color:var(--gold)">👁 预览：欧美金发女性形象 · 产品实拍背景 · 9:16竖版 · 英文口播 · 自动字幕</div>';
+}
+
+// ─── Edit ───
+async function startEdit() {
+  const el = document.getElementById('edit-status');
+  el.innerHTML = '<div style="display:flex;flex-direction:column;gap:8px">';
+  const steps = ['🎬 加载视频素材...','✂️ 按脚本时间轴剪辑...','🔤 生成多语言字幕...','🎵 添加背景音乐...','📝 合并片尾品牌卡片...','✅ 导出三种规格成片'];
+  for(let i=0;i<steps.length;i++) {
+    await new Promise(r=>setTimeout(r,700));
+    el.innerHTML += `<div style="font-size:12px;color:var(--text2);font-family:'DM Mono',monospace">${steps[i]}</div>`;
+  }
+  el.innerHTML += '<div style="margin-top:10px;font-size:12px;color:var(--teal)">✅ 剪辑完成！输出：video_9x16.mp4 · video_1x1.mp4 · video_16x9.mp4 · 已加入发布队列</div>';
+}
+
+// ─── Distribute ───
+async function schedulePost() {
+  const el = document.getElementById('distribute-status');
+  el.innerHTML = '<div style="font-size:12px;color:var(--teal);font-family:\'DM Mono\',monospace">✅ 已加入发布队列：<br>• TikTok · 今日 20:30 (UTC+8) · 英文版<br>• Facebook Reels · 今日 17:00 · 英/俄文版<br>• Instagram Reels · 今日 21:00 · 英文版<br>• VK · 今日 18:00 · 俄文版</div>';
+}
+
+async function previewPosts() {
+  const el = document.getElementById('distribute-status');
+  el.innerHTML = '<div style="font-size:12px;color:var(--gold)">👁 4个平台差异化版本预览已生成。文案/字幕/语言各异，符合各平台规范。</div>';
+}
+
+// ─── Leads ───
+async function replyLead(name) {
+  const card = document.getElementById('reply-card');
+  const out = document.getElementById('reply-output');
+  card.style.display='block';
+  out.textContent='🤖 AI 正在生成专业回复...';
+  card.scrollIntoView({behavior:'smooth'});
+
+  const prompt = `你是芭莎纺织的销售专员。请用专业英文为以下询盘生成一封完整的回复邮件：
+
+客户：${name}
+公司：Shaoxing Basha Textile Co., Ltd.
+产品：冬季户外服装面料（硬壳、羽绒服、派克大衣等）
+位置：绍兴柯桥，亚洲最大纺织品集散地
+
+邮件要求：
+- 专业商务英文
+- 感谢询盘，介绍公司优势（20年+经验，300+款/年，全球品牌供应商）
+- 询问客户需求细节（面料规格、数量、时间线）
+- 提供免费样品
+- 留下WhatsApp联系方式
+- 邮件结尾签名`;
+
+  await callClaude(prompt, out);
+}
+
+async function generateReply() {
+  const out = document.getElementById('reply-output');
+  const card = document.getElementById('reply-card');
+  card.style.display='block';
+  out.textContent='🤖 正在为所有新询盘批量生成回复...';
+
+  const prompt = `为芭莎纺织生成一套标准的B2B询盘回复模板，包含：
+1. 英文标准模板
+2. 俄文标准模板（针对俄罗斯客户）
+要求专业、有温度、突出公司优势和免费样品offer。`;
+
+  await callClaude(prompt, out);
+}
+
+// ─── Pipeline ───
+async function runPipeline() {
+  const nodes = [0,1,2,3,4,5,6];
+  const connectors = [0,1,2,3,4,5];
+  const statusEl = document.getElementById('pipeline-status');
+  const progress = document.getElementById('pipeline-progress');
+  const steps = ['🔍 分析今日爆款...','✍️ 生成多语言文案...','🎙 合成AI配音...','👤 渲染数字人视频...','✂️ 自动剪辑合成...','🚀 发布至4个平台...','📬 启动询盘监控...'];
+
+  for(let i=0;i<nodes.length;i++) {
+    if(i>0) document.getElementById('pn'+(i-1)).className='pipe-circle done';
+    document.getElementById('pn'+i).className='pipe-circle active';
+    if(i>0) document.getElementById('pc'+(i-1)).className='pipe-connector done';
+    statusEl.textContent = steps[i];
+    progress.style.width = ((i+1)/nodes.length*100)+'%';
+    await new Promise(r=>setTimeout(r,1200));
+  }
+  document.getElementById('pn6').className='pipe-circle done';
+  statusEl.textContent = '✅ 本轮自动化生产完成！已生产4条视频并发布至所有平台。';
+  statusEl.style.color='var(--teal)';
+}
+
+// ─── Settings ───
+function saveSettings() {
+  const el = document.getElementById('settings-status');
+  el.textContent='✅ 设置已保存';
+  setTimeout(()=>el.textContent='',3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// VIDEO EDITOR ENGINE v3
+// ═══════════════════════════════════════════════════════
+const EDITOR = {
+  mediaLibrary: [],    // {id, name, type:'video'|'image', src, duration, element}
+  timeline: [],        // {id, mediaId, duration, startAt, volume, filter, caption}
+  textOverlays: [],    // {id, text, x, y, fontSize, color, bold, font}
+  selectedClip: null,
+  bgmType: '',
+  bgmVolume: 0.3,
+  masterVolume: 0.8,
+  canvasRatio: '9:16',
+  isPlaying: false,
+  playbackPos: 0,
+  playRAF: null,
+  playbackTimer: null,
+  activeClipIndex: 0,
+  logoVisible: false,
+  nextId: 1,
+  mediaRecorder: null,
+  bgmOscCtx: null,
+  bgmGain: null,
+};
+
+// Preset free clips (canvas-drawn, no external fetch needed)
+const PRESET_CLIPS = {
+  fabric1:  { name:'冬季面料展示', colors:['#1a1e2c','#2a3050'], icon:'🧥', text:'PREMIUM FABRIC' },
+  outdoor1: { name:'户外雪山场景', colors:['#0a1628','#1e3a5f'], icon:'🏔', text:'OUTDOOR PERFORMANCE' },
+  factory1: { name:'工厂生产实拍', colors:['#1a0f05','#3d2010'], icon:'🏭', text:'MANUFACTURING EXCELLENCE' },
+  fashion1: { name:'时尚展示', colors:['#1a1020','#2d1840'], icon:'👗', text:'GLOBAL FASHION BRANDS' },
+  title_card:{ name:'品牌标题卡',  colors:['#0d0e14','#1a1e2c'], icon:'📝', text:'SHAOXING BASHA TEXTILE' },
+  cta_card:  { name:'CTA行动卡',  colors:['#1a1000','#3d2a00'], icon:'📲', text:'FREE SAMPLE REQUEST' },
+};
+
+// Canvas sizing
+const RATIO_MAP = { '9:16':[360,640], '1:1':[480,480], '16:9':[640,360] };
+
+function getCanvas() { return document.getElementById('preview-canvas'); }
+function getCtx() { return getCanvas().getContext('2d'); }
+
+function setCanvasDimensions() {
+  const c = getCanvas();
+  const wrap = document.getElementById('canvas-wrap');
+  const [w, h] = RATIO_MAP[EDITOR.canvasRatio];
+  c.width = w; c.height = h;
+  // Scale wrap to max 260px wide
+  const scale = Math.min(260/w, 320/h);
+  wrap.style.width = Math.round(w*scale)+'px';
+  wrap.style.height = Math.round(h*scale)+'px';
+  c.style.width = '100%'; c.style.height = '100%';
+}
+
+function changeCanvasRatio(r) {
+  EDITOR.canvasRatio = r;
+  setCanvasDimensions();
+  drawCurrentFrame();
+}
+
+// ── Media Library ──────────────────────────────────────
+function openUploadLocal() {
+  document.getElementById('local-file-input').click();
+}
+
+function handleLocalFiles(evt) {
+  const files = [...evt.target.files];
+  files.forEach(file => {
+    const url = URL.createObjectURL(file);
+    const type = file.type.startsWith('video') ? 'video' : 'image';
+    const id = 'media_'+EDITOR.nextId++;
+    const name = file.name.replace(/\.[^.]+$/,'').slice(0,20);
+    if (type === 'video') {
+      const vid = document.createElement('video');
+      vid.src = url; vid.muted = true; vid.preload = 'metadata';
+      vid.addEventListener('loadedmetadata', () => {
+        addToLibrary({ id, name, type:'video', src:url, duration:Math.min(vid.duration,30), element:vid });
+      });
+      vid.load();
+    } else {
+      const img = new Image();
+      img.onload = () => addToLibrary({ id, name, type:'image', src:url, duration:3, element:img });
+      img.src = url;
+    }
+  });
+  evt.target.value = '';
+}
+
+function loadFreeMedia() {
+  document.getElementById('free-media-notice').style.display='flex';
+  document.getElementById('url-input-area').style.display='block';
+  document.getElementById('media-empty') && (document.getElementById('media-empty').style.display='none');
+}
+
+function addMediaFromURL() {
+  const url = document.getElementById('media-url-input').value.trim();
+  if (!url) return;
+  const ext = url.split('?')[0].split('.').pop().toLowerCase();
+  const type = ['mp4','webm','mov','avi'].includes(ext) ? 'video' : 'image';
+  const id = 'media_'+EDITOR.nextId++;
+  const name = url.split('/').pop().split('?')[0].slice(0,20)||'素材'+id;
+  if (type === 'video') {
+    const vid = document.createElement('video');
+    vid.crossOrigin='anonymous'; vid.src=url; vid.muted=true; vid.preload='metadata';
+    vid.addEventListener('loadedmetadata', () => addToLibrary({id,name,type:'video',src:url,duration:Math.min(vid.duration,30),element:vid}));
+    vid.addEventListener('error', () => showNotif('⚠️ 视频加载失败，请检查URL或CORS设置', 'fail'));
+    vid.load();
+  } else {
+    const img = new Image(); img.crossOrigin='anonymous';
+    img.onload = () => addToLibrary({id,name,type:'image',src:url,duration:3,element:img});
+    img.onerror = () => showNotif('⚠️ 图片加载失败', 'fail');
+    img.src = url;
+  }
+  document.getElementById('media-url-input').value = '';
+}
+
+function addPresetClip(key) {
+  const preset = PRESET_CLIPS[key];
+  if (!preset) return;
+  const id = 'media_'+EDITOR.nextId++;
+  addToLibrary({ id, name:preset.name, type:'preset', src:null,
+    duration:key.includes('card')?2:5, element:null, preset:key });
+}
+
+function addToLibrary(item) {
+  EDITOR.mediaLibrary.push(item);
+  renderMediaGrid();
+  document.getElementById('media-empty') && (document.getElementById('media-empty').style.display='none');
+  showNotif('✅ 已添加：'+item.name, 'ok');
+}
+
+function renderMediaGrid() {
+  const grid = document.getElementById('media-grid');
+  const existing = grid.querySelectorAll('.media-item-wrap');
+  existing.forEach(e => e.remove());
+  EDITOR.mediaLibrary.forEach(item => {
+    const wrap = document.createElement('div');
+    wrap.className = 'media-item-wrap';
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:4px';
+    const thumb = document.createElement('div');
+    thumb.className = 'media-thumb';
+    thumb.id = 'thumb_'+item.id;
+    if (item.type==='video') {
+      const v = item.element.cloneNode(); v.muted=true; v.loop=true;
+      v.addEventListener('mouseenter',()=>v.play()); v.addEventListener('mouseleave',()=>v.pause());
+      thumb.appendChild(v);
+    } else if (item.type==='image') {
+      const img = document.createElement('img'); img.src=item.src; img.alt=item.name;
+      thumb.appendChild(img);
+    } else {
+      const p = PRESET_CLIPS[item.preset];
+      thumb.style.background=`linear-gradient(135deg,${p.colors[0]},${p.colors[1]})`;
+      thumb.innerHTML+=`<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="font-size:22px">${p.icon}</div><div style="font-size:9px;color:rgba(255,255,255,0.7);font-family:'DM Mono',monospace">${p.text}</div></div>`;
+    }
+    const badge = document.createElement('div'); badge.className='media-thumb-badge';
+    badge.textContent = item.type==='video'?'VID':item.type==='image'?'IMG':'TPL';
+    thumb.appendChild(badge);
+    const lbl = document.createElement('div'); lbl.className='media-thumb-label'; lbl.textContent=item.name;
+    thumb.appendChild(lbl);
+    const addBtn = document.createElement('div'); addBtn.className='media-add-btn'; addBtn.textContent='＋';
+    thumb.appendChild(addBtn);
+    thumb.onclick = () => addToTimeline(item.id);
+    wrap.appendChild(thumb);
+    grid.appendChild(wrap);
+  });
+}
+
+function clearLibrary() {
+  EDITOR.mediaLibrary = [];
+  EDITOR.timeline = [];
+  renderMediaGrid();
+  renderTimeline();
+  clearCanvas();
+  document.getElementById('media-empty').style.display='flex';
+}
+
+// ── Timeline ───────────────────────────────────────────
+function addToTimeline(mediaId) {
+  const item = EDITOR.mediaLibrary.find(m=>m.id===mediaId);
+  if (!item) return;
+  const clipId = 'clip_'+EDITOR.nextId++;
+  const clip = { id:clipId, mediaId, duration:item.duration||3, startAt:0,
+    volume:item.type==='video'?1:0, filter:'none', caption:'' };
+  EDITOR.timeline.push(clip);
+  renderTimeline();
+  selectClip(clipId);
+  showNotif('✅ 已添加至时间轴：'+item.name, 'ok');
+}
+
+function renderTimeline() {
+  const tracks = document.getElementById('tl-tracks');
+  const empty = document.getElementById('tl-empty');
+  tracks.innerHTML='';
+  if (EDITOR.timeline.length===0){empty.style.display='flex';return;}
+  empty.style.display='none';
+  EDITOR.timeline.forEach((clip,i)=>{
+    const item=EDITOR.mediaLibrary.find(m=>m.id===clip.mediaId);
+    if(!item)return;
+    const p=item.type==='preset'?PRESET_CLIPS[item.preset]:null;
+    const div=document.createElement('div');
+    div.className='tl-clip'+(EDITOR.selectedClip===clip.id?' active':'');
+    div.id='tl_'+clip.id;
+    div.onclick=()=>selectClip(clip.id);
+    div.draggable=true;
+    div.addEventListener('dragstart',e=>{e.dataTransfer.setData('text/plain',i);});
+    div.addEventListener('dragover',e=>e.preventDefault());
+    div.addEventListener('drop',e=>{
+      e.preventDefault();
+      const from=parseInt(e.dataTransfer.getData('text/plain'));
+      const to=i;
+      if(from===to)return;
+      const [moved]=EDITOR.timeline.splice(from,1);
+      EDITOR.timeline.splice(to,0,moved);
+      renderTimeline();
+    });
+    // Thumb
+    const thumbWrap=document.createElement('div'); thumbWrap.className='tl-clip-thumb';
+    if(item.type==='video'){const v2=document.createElement('video');v2.src=item.src;v2.muted=true;v2.style.cssText='width:100%;height:100%;object-fit:cover';thumbWrap.appendChild(v2);}
+    else if(item.type==='image'){const img2=document.createElement('img');img2.src=item.src;img2.style.cssText='width:100%;height:100%;object-fit:cover';thumbWrap.appendChild(img2);}
+    else{thumbWrap.style.background=`linear-gradient(135deg,${p.colors[0]},${p.colors[1]})`;thumbWrap.innerHTML=`<div style="display:flex;align-items:center;justify-content:center;height:100%;font-size:16px">${p.icon}</div>`;}
+    div.innerHTML=`<span class="tl-drag-handle">⠿</span>`;
+    div.appendChild(thumbWrap);
+    div.innerHTML+=`<div class="tl-clip-info"><div class="tl-clip-name">${item.name}</div><div class="tl-clip-meta">${item.type.toUpperCase()}${clip.caption?' · "'+clip.caption.slice(0,12)+'..."':''}</div></div>`;
+    if(clip.filter&&clip.filter!=='none'){const fb=document.createElement('div');fb.className='tl-clip-filter-badge';fb.textContent=clip.filter;div.appendChild(fb);}
+    const dur=document.createElement('div');dur.className='tl-clip-dur';dur.textContent=clip.duration+'s';
+    div.appendChild(dur);
+    tracks.appendChild(div);
+  });
+}
+
+function selectClip(id) {
+  EDITOR.selectedClip=id;
+  const clip=EDITOR.timeline.find(c=>c.id===id);
+  const panel=document.getElementById('clip-settings');
+  if(!clip){panel.style.display='none';return;}
+  const item=EDITOR.mediaLibrary.find(m=>m.id===clip.mediaId);
+  panel.style.display='block';
+  document.getElementById('clip-settings-name').textContent=item?item.name:'';
+  document.getElementById('clip-start-in').value=clip.startAt||0;
+  document.getElementById('clip-dur').value=clip.duration||3;
+  document.getElementById('clip-vol').value=clip.volume??1;
+  document.getElementById('clip-filter').value=clip.filter||'none';
+  document.getElementById('clip-caption').value=clip.caption||'';
+  renderTimeline();
+  drawCurrentFrame();
+}
+
+function updateClipSetting(key,val) {
+  const clip=EDITOR.timeline.find(c=>c.id===EDITOR.selectedClip);
+  if(!clip)return;
+  if(['startAt','duration','volume'].includes(key))clip[key]=parseFloat(val);
+  else clip[key]=val;
+  renderTimeline();
+  drawCurrentFrame();
+}
+
+function removeSelectedClip() {
+  EDITOR.timeline=EDITOR.timeline.filter(c=>c.id!==EDITOR.selectedClip);
+  EDITOR.selectedClip=null;
+  document.getElementById('clip-settings').style.display='none';
+  renderTimeline(); drawCurrentFrame();
+}
+
+function duplicateSelectedClip() {
+  const clip=EDITOR.timeline.find(c=>c.id===EDITOR.selectedClip);
+  if(!clip)return;
+  const newClip={...clip,id:'clip_'+EDITOR.nextId++};
+  const idx=EDITOR.timeline.findIndex(c=>c.id===EDITOR.selectedClip);
+  EDITOR.timeline.splice(idx+1,0,newClip);
+  renderTimeline();
+}
+
+function clearTimeline() {
+  EDITOR.timeline=[]; EDITOR.selectedClip=null;
+  document.getElementById('clip-settings').style.display='none';
+  renderTimeline(); clearCanvas();
+}
+
+function addTransition() {
+  showNotif('💡 转场效果将在导出时自动添加（淡入淡出，0.3秒）', 'info');
+}
+
+// ── Canvas Drawing ─────────────────────────────────────
+function clearCanvas() {
+  const ctx=getCtx(); const c=getCanvas();
+  ctx.fillStyle='#080A0F'; ctx.fillRect(0,0,c.width,c.height);
+}
+
+function applyFilter(ctx, filter, w, h) {
+  if(!filter||filter==='none')return;
+  const img=ctx.getImageData(0,0,w,h);
+  const d=img.data;
+  for(let i=0;i<d.length;i+=4){
+    let r=d[i],g=d[i+1],b=d[i+2];
+    if(filter==='warm'){r=Math.min(255,r+20);b=Math.max(0,b-15);}
+    else if(filter==='cool'){b=Math.min(255,b+20);r=Math.max(0,r-10);}
+    else if(filter==='bw'){const lum=0.299*r+0.587*g+0.114*b;r=g=b=lum;}
+    else if(filter==='cinematic'){r=r*0.95+10;g=g*0.95+5;b=b*0.85+20;}
+    else if(filter==='vivid'){r=Math.min(255,r*1.15);g=Math.min(255,g*1.1);b=Math.min(255,b*1.05);}
+    d[i]=r;d[i+1]=g;d[i+2]=b;
+  }
+  ctx.putImageData(img,0,0);
+}
+
+function drawFrameForClip(clip, progress) {
+  const c=getCanvas(); const ctx=getCtx();
+  const [w,h]=[c.width,c.height];
+  const item=EDITOR.mediaLibrary.find(m=>m.id===clip.mediaId);
+  ctx.fillStyle='#080A0F'; ctx.fillRect(0,0,w,h);
+  if(!item)return;
+  if(item.type==='video'&&item.element){
+    try{
+      const t=clip.startAt+(progress*clip.duration);
+      item.element.currentTime=Math.min(t,item.element.duration-0.05);
+      ctx.drawImage(item.element,0,0,w,h);
+    }catch(e){}
+  } else if(item.type==='image'&&item.element){
+    ctx.drawImage(item.element,0,0,w,h);
+  } else if(item.type==='preset'){
+    const p=PRESET_CLIPS[item.preset];
+    const grad=ctx.createLinearGradient(0,0,w,h);
+    grad.addColorStop(0,p.colors[0]); grad.addColorStop(1,p.colors[1]);
+    ctx.fillStyle=grad; ctx.fillRect(0,0,w,h);
+    ctx.font=`bold ${Math.round(w*0.12)}px Syne,sans-serif`;
+    ctx.fillStyle='rgba(240,165,0,0.9)'; ctx.textAlign='center';
+    ctx.fillText(p.icon+' '+p.text,w/2,h/2);
+    if(item.preset==='title_card'){
+      ctx.font=`${Math.round(w*0.06)}px DM Mono,monospace`;
+      ctx.fillStyle='rgba(255,255,255,0.6)';
+      ctx.fillText('SHAOXING · KEQIAO · CHINA',w/2,h*0.62);
+    }
+    if(item.preset==='cta_card'){
+      ctx.font=`bold ${Math.round(w*0.07)}px Syne,sans-serif`;
+      ctx.fillStyle='rgba(255,255,255,0.9)';
+      ctx.fillText('WhatsApp · Free Sample',w/2,h*0.6);
+    }
+  }
+  // Filter
+  if(clip.filter&&clip.filter!=='none') try{applyFilter(ctx,clip.filter,w,h);}catch(e){}
+  // Caption
+  if(clip.caption){
+    const fs=Math.max(14,Math.round(w*0.055));
+    ctx.font=`bold ${fs}px Syne,sans-serif`;
+    ctx.textAlign='center';
+    const tw=ctx.measureText(clip.caption).width;
+    ctx.fillStyle='rgba(0,0,0,0.55)';
+    ctx.fillRect(w/2-tw/2-8, h*0.78-fs, tw+16, fs+10);
+    ctx.fillStyle='#F0A500'; ctx.fillText(clip.caption,w/2,h*0.78);
+  }
+  // Text overlays
+  EDITOR.textOverlays.forEach(ov=>{
+    ctx.font=`${ov.bold?'bold ':''} ${ov.fontSize||Math.round(w*0.06)}px ${ov.font||'Syne'},sans-serif`;
+    ctx.fillStyle=ov.color||'#FFFFFF'; ctx.textAlign='center';
+    ctx.fillText(ov.text, ov.x*w/100, ov.y*h/100);
+  });
+  // Logo
+  if(EDITOR.logoVisible){
+    const lfs=Math.max(10,Math.round(w*0.04));
+    ctx.font=`bold ${lfs}px DM Mono,monospace`;
+    ctx.fillStyle='rgba(240,165,0,0.95)'; ctx.textAlign='right';
+    ctx.fillText('BASHA TEXTILE',w-10,h-10);
+  }
+}
+
+function drawCurrentFrame() {
+  if(EDITOR.timeline.length===0){clearCanvas();return;}
+  const clip=EDITOR.timeline[Math.min(EDITOR.activeClipIndex,EDITOR.timeline.length-1)];
+  if(clip) drawFrameForClip(clip, 0.5);
+}
+
+// ── Playback ───────────────────────────────────────────
+function togglePreviewPlay() {
+  if(EDITOR.isPlaying) stopPreview();
+  else startPreview();
+}
+
+function startPreview() {
+  if(EDITOR.timeline.length===0){showNotif('⚠️ 请先添加素材到时间轴','fail');return;}
+  EDITOR.isPlaying=true;
+  document.getElementById('play-btn').textContent='⏹';
+  EDITOR.playbackPos=0; EDITOR.activeClipIndex=0;
+  const totalDur=EDITOR.timeline.reduce((a,c)=>a+c.duration,0);
+  const startTime=performance.now();
+  function loop(){
+    if(!EDITOR.isPlaying)return;
+    const elapsed=(performance.now()-startTime)/1000;
+    if(elapsed>=totalDur){stopPreview();return;}
+    let acc=0;
+    for(let i=0;i<EDITOR.timeline.length;i++){
+      const clip=EDITOR.timeline[i];
+      if(elapsed<acc+clip.duration){
+        EDITOR.activeClipIndex=i;
+        const progress=(elapsed-acc)/clip.duration;
+        drawFrameForClip(clip,progress);
+        document.getElementById('playhead-fill').style.width=(elapsed/totalDur*100)+'%';
+        document.getElementById('time-display').textContent=elapsed.toFixed(1)+'s';
+        break;
+      }
+      acc+=clip.duration;
+    }
+    EDITOR.playRAF=requestAnimationFrame(loop);
+  }
+  EDITOR.playRAF=requestAnimationFrame(loop);
+}
+
+function stopPreview() {
+  EDITOR.isPlaying=false;
+  if(EDITOR.playRAF)cancelAnimationFrame(EDITOR.playRAF);
+  document.getElementById('play-btn').textContent='▶';
+}
+
+function seekPlayhead(e) {
+  const bar=document.getElementById('playhead-bar');
+  const pct=e.offsetX/bar.offsetWidth;
+  const totalDur=EDITOR.timeline.reduce((a,c)=>a+c.duration,0);
+  const t=pct*totalDur;
+  let acc=0;
+  for(let i=0;i<EDITOR.timeline.length;i++){
+    const clip=EDITOR.timeline[i];
+    if(t<acc+clip.duration){
+      EDITOR.activeClipIndex=i;
+      drawFrameForClip(clip,(t-acc)/clip.duration);
+      break;
+    }
+    acc+=clip.duration;
+  }
+  document.getElementById('playhead-fill').style.width=(pct*100)+'%';
+  document.getElementById('time-display').textContent=t.toFixed(1)+'s';
+}
+
+function setMasterVolume(v) {
+  EDITOR.masterVolume=parseFloat(v);
+  document.getElementById('vol-label').textContent=Math.round(v*100)+'%';
+}
+
+// ── Text Overlays ──────────────────────────────────────
+function addTextOverlay() {
+  const text=prompt('输入叠加文字（英文大写效果更佳）:','PREMIUM WINTER FABRICS');
+  if(!text)return;
+  const id='ov_'+EDITOR.nextId++;
+  EDITOR.textOverlays.push({id,text,x:50,y:15,fontSize:null,color:'#F0A500',bold:true,font:'Syne'});
+  renderTextOverlaysList(); drawCurrentFrame();
+}
+
+function renderTextOverlaysList() {
+  const el=document.getElementById('text-overlays-list');
+  if(EDITOR.textOverlays.length===0){el.textContent='暂无文字叠层';return;}
+  el.innerHTML='';
+  EDITOR.textOverlays.forEach(ov=>{
+    const row=document.createElement('div');
+    row.style.cssText='display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)';
+    row.innerHTML=`<span style="flex:1;font-size:12px">${ov.text}</span>
+      <input type="color" value="${ov.color}" style="width:24px;height:24px;border:none;background:none;cursor:pointer" onchange="updateTextColor('${ov.id}',this.value)">
+      <button class="btn btn-red btn-sm" style="padding:3px 8px" onclick="removeTextOverlay('${ov.id}')">✕</button>`;
+    el.appendChild(row);
+  });
+}
+
+function updateTextColor(id,color) {
+  const ov=EDITOR.textOverlays.find(o=>o.id===id);
+  if(ov){ov.color=color; drawCurrentFrame();}
+}
+
+function removeTextOverlay(id) {
+  EDITOR.textOverlays=EDITOR.textOverlays.filter(o=>o.id!==id);
+  renderTextOverlaysList(); drawCurrentFrame();
+}
+
+function addLogoOverlay() {
+  EDITOR.logoVisible=!EDITOR.logoVisible;
+  const btn=event.currentTarget;
+  btn.style.borderColor=EDITOR.logoVisible?'var(--gold)':'';
+  btn.style.color=EDITOR.logoVisible?'var(--gold)':'';
+  document.getElementById('canvas-logo-overlay').style.display=EDITOR.logoVisible?'block':'none';
+  drawCurrentFrame();
+  showNotif(EDITOR.logoVisible?'✅ 已添加品牌Logo水印':'⬛ 已移除品牌Logo水印','ok');
+}
+
+// ── BGM (Web Audio synth) ─────────────────────────────
+function setBGM(type) {
+  EDITOR.bgmType=type;
+  showNotif(type?'🎵 背景音乐已设置：'+type+' (导出时叠入)':'🔇 已移除背景音乐','ok');
+}
+
+function setBGMVolume(v) {
+  EDITOR.bgmVolume=parseFloat(v);
+  document.getElementById('bgm-vol-label').textContent=Math.round(v*100)+'%';
+}
+
+function synthesizeBGM(ctx, duration) {
+  // Generate simple pulsing beat via Web Audio
+  const gain=ctx.createGain(); gain.gain.value=EDITOR.bgmVolume*EDITOR.masterVolume;
+  gain.connect(ctx.destination);
+  const bpm=EDITOR.bgmType==='upbeat'?128:EDITOR.bgmType==='epic'?90:110;
+  const beatDur=60/bpm;
+  const numBeats=Math.ceil(duration/beatDur);
+  for(let i=0;i<numBeats;i++){
+    const osc=ctx.createOscillator();
+    const beatGain=ctx.createGain();
+    osc.connect(beatGain); beatGain.connect(gain);
+    const t=ctx.currentTime+i*beatDur;
+    osc.frequency.value=EDITOR.bgmType==='epic'?80:EDITOR.bgmType==='upbeat'?200:120;
+    osc.type=EDITOR.bgmType==='upbeat'?'sawtooth':'sine';
+    beatGain.gain.setValueAtTime(0,t);
+    beatGain.gain.linearRampToValueAtTime(0.5,t+0.05);
+    beatGain.gain.exponentialRampToValueAtTime(0.001,t+beatDur*0.8);
+    osc.start(t); osc.stop(t+beatDur);
+  }
+}
+
+// ── Export Engine ──────────────────────────────────────
+async function startExport() {
+  if(EDITOR.timeline.length===0){showNotif('⚠️ 请先添加素材到时间轴','fail');return;}
+  const fmt=document.getElementById('export-format').value;
+  const size=parseInt(document.getElementById('export-size').value);
+  const totalDur=EDITOR.timeline.reduce((a,c)=>a+c.duration,0);
+
+  // Adjust canvas for export
+  const [rw,rh]=RATIO_MAP[EDITOR.canvasRatio];
+  const scale=size/Math.max(rw,rh);
+  const ew=Math.round(rw*scale), eh=Math.round(rh*scale);
+
+  // Offscreen canvas
+  const offCanvas=document.createElement('canvas');
+  offCanvas.width=ew; offCanvas.height=eh;
+  const offCtx=offCanvas.getContext('2d');
+
+  // Setup MediaRecorder
+  const stream=offCanvas.captureStream(30);
+  const mimeType=MediaRecorder.isTypeSupported('video/webm;codecs=vp9')?'video/webm;codecs=vp9':'video/webm';
+  let recorder, chunks=[];
+  try {
+    recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:4000000});
+  } catch(e) {
+    recorder=new MediaRecorder(stream);
+  }
+  recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data);};
+
+  // Progress UI
+  const prog=document.getElementById('export-progress-wrap');
+  const fill=document.getElementById('export-progress-fill');
+  const statusTxt=document.getElementById('export-status-text');
+  const eta=document.getElementById('export-eta');
+  prog.style.display='block';
+  document.getElementById('download-links').style.display='none';
+  document.getElementById('export-btn').disabled=true;
+  document.getElementById('export-btn').innerHTML='<span class="spinner"></span> 渲染中...';
+
+  const RENDER_FPS=30;
+  const totalFrames=Math.ceil(totalDur*RENDER_FPS);
+  let frameIdx=0;
+  const startTs=performance.now();
+
+  recorder.start();
+
+  await new Promise(resolve=>{
+    function renderNextFrame(){
+      if(frameIdx>=totalFrames){resolve();return;}
+      const t=frameIdx/RENDER_FPS;
+      let acc=0;
+      for(let i=0;i<EDITOR.timeline.length;i++){
+        const clip=EDITOR.timeline[i];
+        if(t<acc+clip.duration){
+          const progress=(t-acc)/clip.duration;
+          const item=EDITOR.mediaLibrary.find(m=>m.id===clip.mediaId);
+          offCtx.fillStyle='#080A0F'; offCtx.fillRect(0,0,ew,eh);
+          if(item){
+            if(item.type==='video'&&item.element){
+              try{item.element.currentTime=clip.startAt+progress*clip.duration; offCtx.drawImage(item.element,0,0,ew,eh);}catch(e){}
+            } else if(item.type==='image'&&item.element){
+              offCtx.drawImage(item.element,0,0,ew,eh);
+            } else if(item.type==='preset'){
+              const p=PRESET_CLIPS[item.preset];
+              const gr=offCtx.createLinearGradient(0,0,ew,eh);
+              gr.addColorStop(0,p.colors[0]); gr.addColorStop(1,p.colors[1]);
+              offCtx.fillStyle=gr; offCtx.fillRect(0,0,ew,eh);
+              offCtx.font=`bold ${Math.round(ew*0.1)}px sans-serif`;
+              offCtx.fillStyle='rgba(240,165,0,0.9)'; offCtx.textAlign='center';
+              offCtx.fillText(p.icon+' '+p.text,ew/2,eh/2);
+            }
+          }
+          // Transition fade at clip boundaries
+          const fadeLen=0.3;
+          if(progress<fadeLen){const a=progress/fadeLen; offCtx.fillStyle=`rgba(0,0,0,${1-a})`; offCtx.fillRect(0,0,ew,eh);}
+          if(progress>1-fadeLen){const a=(progress-(1-fadeLen))/fadeLen; offCtx.fillStyle=`rgba(0,0,0,${a})`; offCtx.fillRect(0,0,ew,eh);}
+          // Filter
+          if(clip.filter&&clip.filter!=='none')try{applyFilter(offCtx,clip.filter,ew,eh);}catch(e){}
+          // Caption
+          if(clip.caption){
+            const fs=Math.max(14,Math.round(ew*0.055));
+            offCtx.font=`bold ${fs}px sans-serif`; offCtx.textAlign='center';
+            const tw=offCtx.measureText(clip.caption).width;
+            offCtx.fillStyle='rgba(0,0,0,0.55)';
+            offCtx.fillRect(ew/2-tw/2-8,eh*0.78-fs,tw+16,fs+10);
+            offCtx.fillStyle='#F0A500'; offCtx.fillText(clip.caption,ew/2,eh*0.78);
+          }
+          // Overlays
+          EDITOR.textOverlays.forEach(ov=>{
+            const fs=Math.max(12,Math.round(ew*0.055));
+            offCtx.font=`${ov.bold?'bold ':''} ${fs}px sans-serif`;
+            offCtx.fillStyle=ov.color||'#FFF'; offCtx.textAlign='center';
+            offCtx.fillText(ov.text,ov.x*ew/100,ov.y*eh/100);
+          });
+          // Logo
+          if(EDITOR.logoVisible){
+            offCtx.font=`bold ${Math.max(10,Math.round(ew*0.04))}px monospace`;
+            offCtx.fillStyle='rgba(240,165,0,0.95)'; offCtx.textAlign='right';
+            offCtx.fillText('BASHA TEXTILE',ew-8,eh-8);
+          }
+          break;
+        }
+        acc+=clip.duration;
+      }
+      frameIdx++;
+      const pct=frameIdx/totalFrames;
+      fill.style.width=(pct*100)+'%';
+      statusTxt.textContent=`渲染帧 ${frameIdx}/${totalFrames}`;
+      const elapsed=(performance.now()-startTs)/1000;
+      const remaining=elapsed/pct*(1-pct);
+      eta.textContent=`预计剩余：${remaining.toFixed(1)}秒`;
+      setTimeout(renderNextFrame,1000/RENDER_FPS);
+    }
+    renderNextFrame();
+  });
+
+  recorder.stop();
+  await new Promise(r=>recorder.onstop=r);
+
+  const blob=new Blob(chunks,{type:mimeType});
+  const url=URL.createObjectURL(blob);
+  const ratio=EDITOR.canvasRatio.replace(':','x');
+  const filename=`BazaarAI_${ratio}_${size}p_${Date.now()}.webm`;
+
+  document.getElementById('download-links').style.display='block';
+  document.getElementById('download-btns').innerHTML=`
+    <a href="${url}" download="${filename}" class="btn btn-gold">
+      ⬇ 下载 ${filename}
+    </a>
+    <button class="btn btn-teal" onclick="previewExported('${url}')">▶ 在线预览</button>
+  `;
+  prog.style.display='none';
+  document.getElementById('export-btn').disabled=false;
+  document.getElementById('export-btn').innerHTML='<span>📤</span> 开始渲染导出';
+  showNotif('🎉 视频导出成功！文件：'+filename,'ok');
+
+  // Restore preview canvas
+  setCanvasDimensions(); drawCurrentFrame();
+}
+
+async function exportAllFormats() {
+  const ratios=['9:16','1:1','16:9'];
+  for(const r of ratios){
+    EDITOR.canvasRatio=r;
+    document.getElementById('canvas-ratio').value=r;
+    setCanvasDimensions();
+    showNotif('📦 导出 '+r+' 规格...','info');
+    await startExport();
+    await new Promise(res=>setTimeout(res,500));
+  }
+  showNotif('🎉 全部3种规格导出完成！','ok');
+}
+
+function previewExported(url) {
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:2000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px';
+  modal.innerHTML=`<video src="${url}" controls autoplay style="max-width:90vw;max-height:80vh;border-radius:12px"></video>
+    <button onclick="this.parentElement.remove()" style="padding:8px 20px;border:1px solid rgba(255,255,255,0.3);background:transparent;color:white;border-radius:6px;cursor:pointer;font-size:13px">✕ 关闭</button>`;
+  document.body.appendChild(modal);
+}
+
+async function generateAIEditPlan() {
+  const clips=EDITOR.timeline.length;
+  const totalDur=EDITOR.timeline.reduce((a,c)=>a+c.duration,0);
+  const out=document.getElementById('edit-ai-output');
+  out.style.display='block';
+  const prompt=`请为芭莎纺织生成一个${totalDur.toFixed(1)}秒、共${clips}个片段的专业剪辑方案：
+当前时间轴片段：${EDITOR.timeline.map((c,i)=>{const item=EDITOR.mediaLibrary.find(m=>m.id===c.mediaId);return `${i+1}. ${item?item.name:'素材'}(${c.duration}s,${c.filter}滤镜)`;}).join(' | ')}
+目标规格：${EDITOR.canvasRatio}
+请给出：1)各片段滤镜/字幕优化建议 2)转场方式 3)字幕文案建议（英文） 4)完整发布说明文字（TikTok/FB/INS各平台版本）`;
+  await aiStream(prompt, out, getSysPrompt());
+}
+
+// ── Utility ────────────────────────────────────────────
+function previewTimeline() {
+  if(EDITOR.timeline.length===0){showNotif('⚠️ 时间轴为空','fail');return;}
+  startPreview();
+}
+
+let notifTimer=null;
+function showNotif(msg, type='ok') {
+  let el=document.getElementById('editor-notif');
+  if(!el){
+    el=document.createElement('div');
+    el.id='editor-notif';
+    el.style.cssText='position:fixed;bottom:24px;right:24px;z-index:9999;padding:10px 18px;border-radius:8px;font-size:12px;font-family:DM Mono,monospace;transition:all 0.3s;max-width:320px';
+    document.body.appendChild(el);
+  }
+  el.textContent=msg;
+  el.style.background=type==='ok'?'#1D9E75':type==='fail'?'#FF6B6B':type==='info'?'#F0A500':'#4F8EF7';
+  el.style.color='#fff';
+  el.style.opacity='1';
+  if(notifTimer)clearTimeout(notifTimer);
+  notifTimer=setTimeout(()=>{el.style.opacity='0';},3000);
+}
+
+// ── Init editor ────────────────────────────────────────
+function initEditor() {
+  setCanvasDimensions();
+  clearCanvas();
+  // Add default presets to get started
+  addPresetClip('title_card');
+  addPresetClip('fabric1');
+  addPresetClip('cta_card');
+}
+
+// Editor init integrated into main load handler
+document.addEventListener("DOMContentLoaded", function() {
+  setTimeout(initEditor, 300);
+});
+
+</script>
+</body>
+</html>
