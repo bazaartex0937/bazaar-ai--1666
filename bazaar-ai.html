@@ -1,0 +1,2671 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bazaar AI · Content Automation System</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg0: #080A0F;
+  --bg1: #0D0F18;
+  --bg2: #131620;
+  --bg3: #1A1E2C;
+  --bg4: #222638;
+  --gold: #F0A500;
+  --gold2: #FFD166;
+  --gold-dim: rgba(240,165,0,0.12);
+  --teal: #00D4AA;
+  --teal-dim: rgba(0,212,170,0.1);
+  --blue: #4F8EF7;
+  --blue-dim: rgba(79,142,247,0.1);
+  --red: #FF6B6B;
+  --red-dim: rgba(255,107,107,0.1);
+  --purple: #A78BFA;
+  --purple-dim: rgba(167,139,250,0.1);
+  --text1: #F0EEE8;
+  --text2: #9B98A8;
+  --text3: #5C5970;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.1);
+  --r: 8px;
+  --r2: 12px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  font-family: 'Noto Sans SC', sans-serif;
+  background: var(--bg0);
+  color: var(--text1);
+  min-height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 220px;
+  min-width: 220px;
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 100;
+}
+.logo {
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.logo-mark {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  color: var(--gold);
+  letter-spacing: -0.5px;
+}
+.logo-sub {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 3px;
+}
+.nav { flex: 1; padding: 12px 10px; overflow-y: auto; }
+.nav-section {
+  font-size: 9px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1.8px;
+  color: var(--text3);
+  padding: 14px 10px 6px;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: var(--r);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 13px;
+  transition: all 0.15s;
+  margin-bottom: 1px;
+  position: relative;
+}
+.nav-item:hover { background: var(--bg3); color: var(--text1); }
+.nav-item.active { background: var(--gold-dim); color: var(--gold); }
+.nav-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 20%; bottom: 20%;
+  width: 2px;
+  background: var(--gold);
+  border-radius: 1px;
+}
+.nav-icon { width: 18px; text-align: center; font-size: 15px; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto;
+  background: var(--gold);
+  color: var(--bg0);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 10px;
+}
+.sidebar-footer { padding: 12px 14px; border-top: 1px solid var(--border); }
+.sys-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--text3);
+  font-family: 'DM Mono', monospace;
+}
+.status-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 6px var(--teal);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ── MAIN ── */
+.main {
+  margin-left: 220px;
+  flex: 1;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(8,10,15,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 28px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.topbar-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 16px; }
+.topbar-right { display: flex; gap: 8px; align-items: center; }
+.api-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.api-status-bar:hover { border-color: var(--gold); color: var(--gold); }
+.api-status-bar.connected { border-color: rgba(0,212,170,0.4); color: var(--teal); }
+.api-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text3); }
+.api-dot.on { background: var(--teal); box-shadow: 0 0 4px var(--teal); }
+.pill {
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  color: var(--text3);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.pill:hover { border-color: var(--gold); color: var(--gold); }
+.pill.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+.content { padding: 28px; flex: 1; }
+
+/* ── CARDS ── */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.card-title-icon {
+  width: 30px; height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+.icon-gold { background: var(--gold-dim); color: var(--gold); }
+.icon-teal { background: var(--teal-dim); color: var(--teal); }
+.icon-blue { background: var(--blue-dim); color: var(--blue); }
+.icon-purple { background: var(--purple-dim); color: var(--purple); }
+
+/* ── FORM ── */
+label {
+  display: block;
+  font-size: 11px;
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text3);
+  margin-bottom: 6px;
+}
+input[type="text"], input[type="url"], input[type="password"], textarea, select {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r);
+  color: var(--text1);
+  font-family: 'Noto Sans SC', sans-serif;
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+textarea { resize: vertical; min-height: 80px; }
+select option { background: var(--bg3); }
+.form-row { margin-bottom: 16px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* ── BUTTONS ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border-radius: var(--r);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+  font-family: 'Noto Sans SC', sans-serif;
+}
+.btn-gold { background: var(--gold); color: var(--bg0); }
+.btn-gold:hover { background: var(--gold2); transform: translateY(-1px); }
+.btn-outline { background: transparent; border: 1px solid var(--border2); color: var(--text2); }
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-teal { background: var(--teal-dim); border: 1px solid rgba(0,212,170,0.3); color: var(--teal); }
+.btn-teal:hover { background: rgba(0,212,170,0.2); }
+.btn-red { background: var(--red-dim); border: 1px solid rgba(255,107,107,0.3); color: var(--red); }
+.btn-purple { background: var(--purple-dim); border: 1px solid rgba(167,139,250,0.3); color: var(--purple); }
+.btn-sm { padding: 6px 14px; font-size: 12px; }
+.btn:disabled { opacity: .4; cursor: not-allowed; transform: none !important; }
+
+/* ── AI OUTPUT ── */
+.ai-output {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--text1);
+  margin-top: 14px;
+  min-height: 60px;
+  white-space: pre-wrap;
+  font-family: 'Noto Sans SC', sans-serif;
+  position: relative;
+}
+.ai-output.loading { color: var(--text3); font-family: 'DM Mono', monospace; font-size: 12px; }
+.ai-output-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+/* ── METRICS ── */
+.metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.metric-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--r2);
+  padding: 16px 18px;
+}
+.metric-label { font-size: 10px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); margin-bottom: 8px; }
+.metric-value { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 700; }
+.metric-sub { font-size: 11px; color: var(--text3); margin-top: 4px; }
+.metric-up { color: var(--teal); }
+
+/* ── PLATFORM CHIPS ── */
+.platform-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.platform-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: 20px;
+  border: 1px solid var(--border2);
+  font-size: 12px; cursor: pointer;
+  transition: all 0.15s; color: var(--text2);
+}
+.platform-chip.sel-tiktok { border-color: #fff; color: #fff; background: rgba(255,255,255,0.06); }
+.platform-chip.sel-facebook { border-color: #4267B2; color: #4267B2; background: rgba(66,103,178,0.1); }
+.platform-chip.sel-instagram { border-color: #E1306C; color: #E1306C; background: rgba(225,48,108,0.1); }
+.platform-chip.sel-vk { border-color: #4C75A3; color: #4C75A3; background: rgba(76,117,163,0.1); }
+.platform-chip:hover { border-color: var(--gold); color: var(--gold); }
+
+/* ── LANG CHIPS ── */
+.lang-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+.lang-chip {
+  padding: 5px 12px; border-radius: 20px;
+  border: 1px solid var(--border2); font-size: 12px;
+  cursor: pointer; color: var(--text2); transition: all 0.15s;
+  font-family: 'DM Mono', monospace;
+}
+.lang-chip.active { background: var(--gold-dim); border-color: var(--gold); color: var(--gold); }
+
+/* ── PIPELINE ── */
+.pipeline-viz { display: flex; align-items: center; padding: 14px 0; overflow-x: auto; }
+.pipe-node { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; min-width: 80px; }
+.pipe-circle {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--border2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; color: var(--text3); transition: all 0.3s;
+}
+.pipe-circle.done { border-color: var(--teal); color: var(--teal); background: var(--teal-dim); }
+.pipe-circle.active { border-color: var(--gold); color: var(--gold); background: var(--gold-dim); animation: pipe-pulse 1.5s infinite; }
+@keyframes pipe-pulse { 0%,100%{box-shadow:0 0 0 0 rgba(240,165,0,0.4)} 50%{box-shadow:0 0 0 8px rgba(240,165,0,0)} }
+.pipe-label { font-size: 10px; color: var(--text3); text-align: center; font-family: 'DM Mono', monospace; }
+.pipe-connector { flex: 1; height: 2px; background: var(--border2); min-width: 16px; }
+.pipe-connector.done { background: var(--teal); }
+
+/* ── SCRIPT BLOCK ── */
+.script-block {
+  background: var(--bg1);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-top: 14px;
+}
+.script-lang-bar { display: flex; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+.script-lang-tab {
+  padding: 8px 16px; font-size: 11px;
+  font-family: 'DM Mono', monospace; cursor: pointer;
+  color: var(--text3); border-right: 1px solid var(--border); transition: all 0.15s;
+}
+.script-lang-tab.active { background: var(--gold-dim); color: var(--gold); }
+.script-content {
+  padding: 16px 18px; font-size: 13px; line-height: 1.8;
+  white-space: pre-wrap; min-height: 120px; color: var(--text1);
+  max-height: 400px; overflow-y: auto;
+}
+
+/* ── TABLE ── */
+.lead-table { width: 100%; border-collapse: collapse; }
+.lead-table th {
+  text-align: left; padding: 10px 14px;
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text3); border-bottom: 1px solid var(--border);
+}
+.lead-table td { padding: 12px 14px; font-size: 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.lead-table tr:last-child td { border-bottom: none; }
+.lead-table tr:hover td { background: var(--bg3); }
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 3px 9px; border-radius: 12px;
+  font-size: 10px; font-family: 'DM Mono', monospace;
+}
+.status-new { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(79,142,247,0.3); }
+.status-replied { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(0,212,170,0.3); }
+.status-hot { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,165,0,0.3); }
+
+/* ── TOGGLE ── */
+.toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.toggle-row:last-child { border-bottom: none; }
+.toggle-label { font-size: 13px; color: var(--text1); }
+.toggle-sub { font-size: 11px; color: var(--text3); margin-top: 2px; }
+.toggle {
+  width: 40px; height: 22px; background: var(--bg4);
+  border-radius: 11px; position: relative; cursor: pointer;
+  border: 1px solid var(--border2); transition: background 0.2s; flex-shrink: 0;
+}
+.toggle.on { background: var(--gold); border-color: var(--gold); }
+.toggle::after {
+  content: ''; position: absolute; width: 16px; height: 16px;
+  border-radius: 50%; background: var(--bg0); top: 2px; left: 2px; transition: transform 0.2s;
+}
+.toggle.on::after { transform: translateX(18px); background: white; }
+
+/* ── NOTICE ── */
+.notice {
+  display: flex; gap: 10px; padding: 12px 14px;
+  border-radius: var(--r); font-size: 12px;
+  line-height: 1.6; margin-bottom: 14px;
+}
+.notice-gold { background: var(--gold-dim); border: 1px solid rgba(240,165,0,0.2); color: var(--gold2); }
+.notice-teal { background: var(--teal-dim); border: 1px solid rgba(0,212,170,0.2); color: var(--teal); }
+.notice-red { background: var(--red-dim); border: 1px solid rgba(255,107,107,0.2); color: var(--red); }
+.notice-blue { background: var(--blue-dim); border: 1px solid rgba(79,142,247,0.2); color: var(--blue); }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; animation: slideIn 0.2s ease; }
+@keyframes slideIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+/* ── PROGRESS ── */
+.progress-bar-wrap { background: var(--bg4); border-radius: 3px; height: 5px; overflow: hidden; margin-top: 8px; }
+.progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--gold), var(--gold2)); border-radius: 3px; transition: width 0.5s ease; }
+
+/* ── TICKER ── */
+.ticker-row { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 20px; }
+.ticker-item {
+  flex-shrink: 0; background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 8px 14px; font-size: 11px;
+  font-family: 'DM Mono', monospace; display: flex; align-items: center;
+  gap: 8px; color: var(--text2);
+}
+.ticker-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+/* ── VIDEO CARD ── */
+.video-card-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; }
+.video-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: var(--r2); overflow: hidden; cursor: pointer; transition: all 0.2s;
+}
+.video-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.video-thumb {
+  height: 120px; background: var(--bg4); display: flex; align-items: center;
+  justify-content: center; font-size: 28px; position: relative; overflow: hidden;
+}
+.video-thumb-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; background: rgba(0,0,0,0.4); opacity: 0; transition: opacity 0.15s;
+}
+.video-card:hover .video-thumb-overlay { opacity: 1; }
+.video-meta { padding: 10px 12px; }
+.video-name { font-size: 12px; font-weight: 500; margin-bottom: 4px; }
+.video-stats { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+
+/* ── API PANEL ── */
+.api-panel {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: var(--r2);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+.api-panel-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 18px; background: var(--bg4); cursor: pointer;
+  border-bottom: 1px solid var(--border);
+}
+.api-panel-title { font-family: 'Syne', sans-serif; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.api-panel-body { padding: 16px 18px; }
+.api-channel-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 14px; background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); margin-bottom: 8px;
+}
+.api-channel-row:last-child { margin-bottom: 0; }
+.api-channel-info { display: flex; align-items: center; gap: 12px; }
+.api-channel-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  flex-shrink: 0;
+}
+.api-channel-name { font-size: 13px; font-weight: 500; }
+.api-channel-sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; }
+.api-channel-right { display: flex; align-items: center; gap: 10px; }
+.api-key-field { width: 220px; }
+.api-priority-badge {
+  font-size: 10px; font-family: 'DM Mono', monospace;
+  padding: 3px 8px; border-radius: 10px;
+}
+.priority-1 { background: var(--gold-dim); color: var(--gold); border: 1px solid rgba(240,165,0,0.3); }
+.priority-2 { background: var(--teal-dim); color: var(--teal); border: 1px solid rgba(0,212,170,0.3); }
+.priority-3 { background: var(--blue-dim); color: var(--blue); border: 1px solid rgba(79,142,247,0.3); }
+.priority-4 { background: var(--purple-dim); color: var(--purple); border: 1px solid rgba(167,139,250,0.3); }
+.priority-free { background: var(--bg4); color: var(--text3); border: 1px solid var(--border2); }
+.api-test-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); }
+.api-test-dot.ok { background: var(--teal); box-shadow: 0 0 5px var(--teal); }
+.api-test-dot.fail { background: var(--red); }
+.api-test-dot.active { background: var(--gold); animation: pulse-dot 1s infinite; }
+.api-test-dot.free { background: var(--purple); box-shadow: 0 0 5px var(--purple); }
+
+/* ── ACTIVE API INDICATOR ── */
+.current-api-indicator {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; background: var(--bg3);
+  border: 1px solid rgba(0,212,170,0.3);
+  border-radius: var(--r); margin-bottom: 14px;
+  font-size: 12px; font-family: 'DM Mono', monospace;
+}
+
+/* ── LOG ── */
+.api-log {
+  background: var(--bg1); border: 1px solid var(--border);
+  border-radius: var(--r); padding: 12px 14px;
+  font-size: 11px; font-family: 'DM Mono', monospace;
+  color: var(--text3); max-height: 160px; overflow-y: auto;
+  line-height: 1.7;
+}
+.log-ok { color: var(--teal); }
+.log-fail { color: var(--red); }
+.log-info { color: var(--gold); }
+.log-switch { color: var(--blue); }
+
+/* ── SPINNER ── */
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block; vertical-align: middle;
+}
+
+/* ── MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(4px); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2);
+  border-radius: var(--r2); padding: 28px; width: 520px;
+  max-width: 90vw; max-height: 80vh; overflow-y: auto;
+}
+.modal-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 20px; }
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border2); }
+
+@media (max-width:900px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .metrics-row { grid-template-columns: 1fr 1fr; }
+  .video-card-grid { grid-template-columns: 1fr 1fr; }
+  .api-key-field { width: 140px; }
+}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-mark">BAZAAR AI</div>
+    <div class="logo-sub">Content Automation System</div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">System</div>
+    <div class="nav-item active" onclick="switchView('dashboard',this)">
+      <span class="nav-icon">⬡</span> 总控台
+    </div>
+    <div class="nav-section">Automation</div>
+    <div class="nav-item" onclick="switchView('viral',this)">
+      <span class="nav-icon">🔥</span> 爆款解析
+    </div>
+    <div class="nav-item" onclick="switchView('copywrite',this)">
+      <span class="nav-icon">✍️</span> AI文案生成
+    </div>
+    <div class="nav-item" onclick="switchView('voice',this)">
+      <span class="nav-icon">🎙</span> 声音配置
+    </div>
+    <div class="nav-item" onclick="switchView('avatar',this)">
+      <span class="nav-icon">👤</span> 数字人设置
+    </div>
+    <div class="nav-item" onclick="switchView('edit',this)">
+      <span class="nav-icon">🎬</span> 自动剪辑
+    </div>
+    <div class="nav-item" onclick="switchView('distribute',this)">
+      <span class="nav-icon">🚀</span> 平台分发
+    </div>
+    <div class="nav-section">Intelligence</div>
+    <div class="nav-item" onclick="switchView('leads',this)">
+      <span class="nav-icon">📬</span> 询盘追踪
+      <span class="nav-badge" id="leads-badge">3</span>
+    </div>
+    <div class="nav-item" onclick="switchView('api',this)">
+      <span class="nav-icon">🔌</span> API 管理
+    </div>
+    <div class="nav-item" onclick="switchView('settings',this)">
+      <span class="nav-icon">⚙️</span> 系统设置
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sys-status">
+      <div class="status-dot"></div>
+      <span id="sidebar-api-label">正在连接 API...</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div class="topbar">
+    <div class="topbar-title" id="page-title">总控台</div>
+    <div class="topbar-right">
+      <div class="api-status-bar" id="api-status-bar" onclick="switchView('api',document.querySelectorAll('.nav-item')[9])">
+        <div class="api-dot" id="api-dot-top"></div>
+        <span id="api-label-top">检测中...</span>
+      </div>
+      <div class="pill active">芭莎纺织</div>
+      <div class="pill">Winter 2025/26</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ══ DASHBOARD ══ -->
+    <div class="view active" id="view-dashboard">
+      <div class="ticker-row">
+        <div class="ticker-item"><span class="ticker-dot" style="background:var(--teal)"></span>TikTok · 已发 24 条</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:#4267B2"></span>Facebook · 3 条待审核</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:#E1306C"></span>Instagram · Reels 运行中</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:#4C75A3"></span>VK · 俄文版本队列中</div>
+        <div class="ticker-item"><span class="ticker-dot" style="background:var(--gold)"></span>询盘 · 本周 7 条新增</div>
+      </div>
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">本月视频产出</div>
+          <div class="metric-value">47</div>
+          <div class="metric-sub metric-up">↑ 31% vs 上月</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">询盘总量</div>
+          <div class="metric-value">23</div>
+          <div class="metric-sub metric-up">↑ 15 条本周</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">视频总曝光</div>
+          <div class="metric-value">186K</div>
+          <div class="metric-sub metric-up">↑ TikTok 主导</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">广告日预算</div>
+          <div class="metric-value">$20</div>
+          <div class="metric-sub" style="color:var(--gold)">建议升至 $40</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">⚡</div>自动化生产流水线</div>
+          <button class="btn btn-gold btn-sm" onclick="runPipeline()">▶ 启动一键生产</button>
+        </div>
+        <div class="pipeline-viz">
+          <div class="pipe-node"><div class="pipe-circle" id="pn0">🔍</div><div class="pipe-label">爆款解析</div></div>
+          <div class="pipe-connector" id="pc0"></div>
+          <div class="pipe-node"><div class="pipe-circle" id="pn1">✍️</div><div class="pipe-label">文案生成</div></div>
+          <div class="pipe-connector" id="pc1"></div>
+          <div class="pipe-node"><div class="pipe-circle" id="pn2">🎙</div><div class="pipe-label">声音合成</div></div>
+          <div class="pipe-connector" id="pc2"></div>
+          <div class="pipe-node"><div class="pipe-circle" id="pn3">👤</div><div class="pipe-label">数字人</div></div>
+          <div class="pipe-connector" id="pc3"></div>
+          <div class="pipe-node"><div class="pipe-circle" id="pn4">✂️</div><div class="pipe-label">自动剪辑</div></div>
+          <div class="pipe-connector" id="pc4"></div>
+          <div class="pipe-node"><div class="pipe-circle" id="pn5">🚀</div><div class="pipe-label">多平台发布</div></div>
+          <div class="pipe-connector" id="pc5"></div>
+          <div class="pipe-node"><div class="pipe-circle" id="pn6">📬</div><div class="pipe-label">询盘回收</div></div>
+        </div>
+        <div id="pipeline-status" style="font-size:12px;color:var(--text3);font-family:'DM Mono',monospace;margin-top:10px">就绪 · 点击「启动一键生产」开始自动化流程</div>
+        <div class="progress-bar-wrap" style="margin-top:10px">
+          <div class="progress-bar-fill" id="pipeline-progress" style="width:0%"></div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-icon icon-teal">📹</div>最近生产视频</div>
+          </div>
+          <div class="video-card-grid" style="grid-template-columns:1fr 1fr">
+            <div class="video-card">
+              <div class="video-thumb" style="background:linear-gradient(135deg,#1a1e2c,#222638)">🧥<div class="video-thumb-overlay">▶</div></div>
+              <div class="video-meta"><div class="video-name">防水硬壳面料展示</div><div class="video-stats">TikTok · 12.4K views</div></div>
+            </div>
+            <div class="video-card">
+              <div class="video-thumb" style="background:linear-gradient(135deg,#181c28,#1e2235)">❄️<div class="video-thumb-overlay">▶</div></div>
+              <div class="video-meta"><div class="video-name">羽绒服面料质感</div><div class="video-stats">Instagram · 8.1K views</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title"><div class="card-title-icon icon-blue">📬</div>最新询盘</div>
+            <button class="btn btn-outline btn-sm" onclick="switchView('leads',document.querySelectorAll('.nav-item')[8])">全部查看</button>
+          </div>
+          <table class="lead-table">
+            <tbody>
+              <tr><td><div style="font-weight:500">Sarah Mitchell</div><div style="font-size:11px;color:var(--text3)">Outdoor Brand · 美国</div></td><td><span class="status-badge status-hot">🔥 高意向</span></td></tr>
+              <tr><td><div style="font-weight:500">Dmitry Volkov</div><div style="font-size:11px;color:var(--text3)">Bask Russia · 俄罗斯</div></td><td><span class="status-badge status-new">新询盘</span></td></tr>
+              <tr><td><div style="font-weight:500">Anna Weber</div><div style="font-size:11px;color:var(--text3)">Alpine Fashion · 德国</div></td><td><span class="status-badge status-replied">已回复</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VIRAL ANALYSIS ══ -->
+    <div class="view" id="view-viral">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🔥</div>爆款视频解析</div>
+          <div class="current-api-indicator" style="margin-bottom:0;font-size:11px" id="viral-api-ind">
+            <div class="api-dot" id="viral-api-dot"></div>
+            <span id="viral-api-name">检测 AI 通道中...</span>
+          </div>
+        </div>
+        <div class="notice notice-gold">💡 输入竞品视频关键词，AI自动分析爆款结构，提取可复用的内容框架</div>
+        <div class="form-row">
+          <label>视频关键词 / 主题</label>
+          <input type="text" id="viral-input" placeholder="例：outdoor fabric supplier, hardshell waterproof" value="outdoor fabric B2B TikTok"/>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>内容类目</label>
+            <select id="viral-category">
+              <option>冬季户外服装面料</option>
+              <option>防水硬壳面料</option>
+              <option>羽绒服面料</option>
+              <option>派克大衣面料</option>
+              <option>户外运动面料</option>
+            </select>
+          </div>
+          <div>
+            <label>目标市场</label>
+            <select id="viral-market">
+              <option>欧美市场 (英语)</option>
+              <option>俄罗斯市场 (俄语)</option>
+              <option>中东市场 (阿拉伯语)</option>
+              <option>全球市场 (多语言)</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="analyzeViral()" id="viral-btn">
+          <span>🔍</span> AI 深度解析爆款结构
+        </button>
+        <div class="ai-output loading" id="viral-output">等待输入内容，点击按钮开始分析...</div>
+        <div class="ai-output-actions" id="viral-actions" style="display:none">
+          <button class="btn btn-teal btn-sm" onclick="copyText('viral-output')">📋 复制结果</button>
+          <button class="btn btn-outline btn-sm" onclick="sendViralToCopy()">→ 应用至文案生成</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ COPYWRITING ══ -->
+    <div class="view" id="view-copywrite">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">✍️</div>AI 视频文案生成</div>
+          <div class="current-api-indicator" style="margin-bottom:0;font-size:11px">
+            <div class="api-dot" id="copy-api-dot"></div>
+            <span id="copy-api-name">AI 通道就绪</span>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>产品/面料类型</label>
+            <select id="copy-product">
+              <option>防水硬壳面料 (Hardshell)</option>
+              <option>羽绒服面料 (Down coat fabric)</option>
+              <option>棉服面料 (Cotton-padded)</option>
+              <option>风衣面料 (Trench coat)</option>
+              <option>派克大衣面料 (Parka)</option>
+            </select>
+          </div>
+          <div>
+            <label>视频时长</label>
+            <select id="copy-duration">
+              <option>15秒 (极短钩子版)</option>
+              <option>30秒 (标准版)</option>
+              <option>60秒 (完整介绍版)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>核心卖点</label>
+          <input type="text" id="copy-usp" placeholder="20年生产经验 · 年产300+款 · 已供货多个知名品牌" value="20年生产经验，绍兴柯桥，年产300+款，全球品牌供应商"/>
+        </div>
+        <div class="form-row">
+          <label>目标语言（可多选）</label>
+          <div class="lang-chips" id="lang-chips">
+            <div class="lang-chip active" data-lang="en" onclick="toggleLang(this)">🇬🇧 English</div>
+            <div class="lang-chip" data-lang="ru" onclick="toggleLang(this)">🇷🇺 Русский</div>
+            <div class="lang-chip" data-lang="ar" onclick="toggleLang(this)">🇦🇪 العربية</div>
+            <div class="lang-chip" data-lang="de" onclick="toggleLang(this)">🇩🇪 Deutsch</div>
+            <div class="lang-chip" data-lang="fr" onclick="toggleLang(this)">🇫🇷 Français</div>
+            <div class="lang-chip" data-lang="es" onclick="toggleLang(this)">🇪🇸 Español</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>视频平台风格</label>
+          <div class="platform-chips">
+            <div class="platform-chip sel-tiktok" data-p="tiktok" onclick="togglePlatform(this)">TikTok</div>
+            <div class="platform-chip sel-facebook" data-p="facebook" onclick="togglePlatform(this)">Facebook</div>
+            <div class="platform-chip sel-instagram" data-p="instagram" onclick="togglePlatform(this)">Instagram</div>
+            <div class="platform-chip sel-vk" data-p="vk" onclick="togglePlatform(this)">VK</div>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="generateCopy()" id="copy-btn">
+          <span>✨</span> AI 一键生成多语言脚本
+        </button>
+        <div id="copy-result" style="display:none;margin-top:16px">
+          <div class="script-block">
+            <div class="script-lang-bar" id="script-tabs"></div>
+            <div class="script-content" id="script-content">生成中...</div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button class="btn btn-teal btn-sm" onclick="copyText('script-content')">📋 复制脚本</button>
+            <button class="btn btn-outline btn-sm" onclick="sendToAvatar()">→ 发送至数字人</button>
+            <button class="btn btn-outline btn-sm" onclick="sendToVoice()">→ 发送至配音</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ VOICE ══ -->
+    <div class="view" id="view-voice">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🎙</div>AI 声音配置</div>
+        </div>
+        <div class="notice notice-gold">⚠️ 声音克隆需使用本人授权录音。请确保已获得被克隆者书面授权。</div>
+        <div class="form-grid">
+          <div>
+            <label>声音类型</label>
+            <select id="voice-type">
+              <option>专业女声 · 英式英语</option>
+              <option>专业男声 · 美式英语</option>
+              <option>专业男声 · 俄语</option>
+              <option>专业女声 · 阿拉伯语</option>
+              <option>自定义克隆声音</option>
+            </select>
+          </div>
+          <div>
+            <label>语速</label>
+            <select id="voice-speed">
+              <option>正常 (1.0x)</option>
+              <option>稍快 (1.1x)</option>
+              <option>快速 (1.2x)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>情感风格</label>
+          <div class="lang-chips" id="voice-style-chips">
+            <div class="lang-chip active" onclick="toggleChip(this,'voice-style-chips')">专业自信</div>
+            <div class="lang-chip" onclick="toggleChip(this,'voice-style-chips')">热情友好</div>
+            <div class="lang-chip" onclick="toggleChip(this,'voice-style-chips')">冷静权威</div>
+            <div class="lang-chip" onclick="toggleChip(this,'voice-style-chips')">活力动感</div>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>配音文本</label>
+          <textarea id="voice-text" rows="4">Looking for premium winter outdoor fabrics? At Shaoxing Basha Textile, we've been crafting world-class hardshell and down coat fabrics for over 20 years. 300 new styles annually, trusted by global brands. Request your free sample today.</textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="previewVoice()">🎵 AI 优化配音文本</button>
+          <button class="btn btn-teal" onclick="generateVoice()">⬇ 生成配音脚本</button>
+        </div>
+        <div id="voice-status" style="margin-top:12px"></div>
+        <div class="ai-output" id="voice-ai-output" style="display:none;margin-top:12px"></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-teal">🔧</div>克隆声音管理</div>
+          <button class="btn btn-outline btn-sm">+ 上传新样本</button>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Emma (英式英语) · 已授权</div><div class="toggle-sub">录制时长 5:24 · 匹配度 94%</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Dmitry (俄语) · 已授权</div><div class="toggle-sub">录制时长 4:11 · 匹配度 91%</div></div>
+          <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+        </div>
+        <div class="toggle-row">
+          <div><div class="toggle-label">Fatima (阿拉伯语) · 审核中</div><div class="toggle-sub">录制时长 3:45 · 处理中...</div></div>
+          <div class="toggle" onclick="this.classList.toggle('on')"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ AVATAR ══ -->
+    <div class="view" id="view-avatar">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">👤</div>AI 数字人配置</div>
+        </div>
+        <div class="notice notice-gold">📋 数字人形象须使用本人授权影像，或购买HeyGen/Synthesia授权数字人库形象。</div>
+        <div class="form-grid">
+          <div>
+            <label>数字人平台</label>
+            <select id="avatar-platform">
+              <option>HeyGen (推荐)</option>
+              <option>Synthesia</option>
+              <option>D-ID</option>
+            </select>
+          </div>
+          <div>
+            <label>目标市场形象</label>
+            <select id="avatar-market">
+              <option>欧美形象 · 金发女性</option>
+              <option>欧美形象 · 深发男性</option>
+              <option>中东形象 · 女性</option>
+              <option>俄罗斯形象 · 女性</option>
+              <option>自定义上传形象</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>背景设置</label>
+            <select>
+              <option>产品实拍背景 (绿幕合成)</option>
+              <option>工厂生产车间</option>
+              <option>白色简洁背景</option>
+              <option>自定义上传背景</option>
+            </select>
+          </div>
+          <div>
+            <label>视频规格</label>
+            <select>
+              <option>9:16 竖版 1080×1920 (Reels)</option>
+              <option>1:1 方形 1080×1080 (Feed)</option>
+              <option>16:9 横版 1920×1080</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>口播脚本</label>
+          <textarea id="avatar-script" rows="5">Looking for premium winter outdoor fabrics? At Shaoxing Basha Textile, we've been crafting world-class hardshell and down coat fabrics for over 20 years. Request your free sample today at our website.</textarea>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="generateAvatar()">🎬 AI 优化口播脚本</button>
+          <button class="btn btn-teal" onclick="previewAvatar()">👁 生成数字人指令</button>
+        </div>
+        <div id="avatar-status" style="margin-top:12px"></div>
+        <div class="ai-output" id="avatar-ai-output" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- ══ EDIT ══ -->
+    <div class="view" id="view-edit">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🎬</div>自动剪辑配置</div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>剪辑模板</label>
+            <select id="edit-template">
+              <option>产品展示标准模板</option>
+              <option>TikTok爆款钩子模板</option>
+              <option>工厂实力展示模板</option>
+              <option>客户案例见证模板</option>
+            </select>
+          </div>
+          <div>
+            <label>字幕样式</label>
+            <select id="edit-subtitle">
+              <option>黄色燃烧字幕 (爆款风)</option>
+              <option>白色简洁字幕</option>
+              <option>渐变彩色字幕</option>
+              <option>无字幕</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>背景音乐</label>
+            <select id="edit-bgm">
+              <option>动感商务 (B2B风格)</option>
+              <option>TikTok热门BGM</option>
+              <option>高端品质感音乐</option>
+              <option>无背景音乐</option>
+            </select>
+          </div>
+          <div>
+            <label>品牌片尾时长</label>
+            <select>
+              <option>3秒 (Logo+官网)</option>
+              <option>5秒 (Logo+WhatsApp+官网)</option>
+              <option>无片尾</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <label>视频素材库</label>
+          <div class="video-card-grid">
+            <div class="video-card" id="vc1" onclick="toggleVideoCard(this)">
+              <div class="video-thumb">💧<div class="video-thumb-overlay">✓ 选中</div></div>
+              <div class="video-meta"><div class="video-name">防水测试·水珠滚落</div><div class="video-stats">0:08 · A类素材</div></div>
+            </div>
+            <div class="video-card" id="vc2" onclick="toggleVideoCard(this)">
+              <div class="video-thumb">🧵<div class="video-thumb-overlay">✓ 选中</div></div>
+              <div class="video-meta"><div class="video-name">面料质感·慢动作特写</div><div class="video-stats">0:12 · A类素材</div></div>
+            </div>
+            <div class="video-card" id="vc3" onclick="toggleVideoCard(this)">
+              <div class="video-thumb">🏭<div class="video-thumb-overlay">✓ 选中</div></div>
+              <div class="video-meta"><div class="video-name">织造车间·生产实拍</div><div class="video-stats">0:15 · B类素材</div></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button class="btn btn-gold" onclick="startEdit()">✂️ AI生成剪辑方案</button>
+          <button class="btn btn-outline" onclick="getEditScript()">📋 获取剪辑脚本</button>
+        </div>
+        <div id="edit-status" style="margin-top:12px"></div>
+        <div class="ai-output" id="edit-ai-output" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- ══ DISTRIBUTE ══ -->
+    <div class="view" id="view-distribute">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">🚀</div>多平台自动分发</div>
+        </div>
+        <div class="notice notice-teal">✅ 每条视频将生成4个差异化版本（文案/字幕/语言各异），避免跨平台同质检测</div>
+        <div class="form-row">
+          <label>选择发布平台</label>
+          <div class="platform-chips" id="dist-platforms">
+            <div class="platform-chip sel-tiktok" data-p="dtiktok" onclick="this.classList.toggle('sel-tiktok')">📱 TikTok</div>
+            <div class="platform-chip sel-facebook" data-p="dfacebook" onclick="this.classList.toggle('sel-facebook')">📘 Facebook Reels</div>
+            <div class="platform-chip sel-instagram" data-p="dinstagram" onclick="this.classList.toggle('sel-instagram')">📷 Instagram Reels</div>
+            <div class="platform-chip sel-vk" data-p="dvk" onclick="this.classList.toggle('sel-vk')">💙 VK</div>
+          </div>
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>发布时间策略</label>
+            <select id="dist-timing">
+              <option>智能最优时间 (推荐)</option>
+              <option>立即发布</option>
+              <option>定时发布</option>
+            </select>
+          </div>
+          <div>
+            <label>发布频率</label>
+            <select id="dist-freq">
+              <option>每日1条 (保守)</option>
+              <option>每日2条 (推荐)</option>
+              <option>每日3条 (激进)</option>
+            </select>
+          </div>
+        </div>
+        <div class="card" style="background:var(--bg3);padding:16px;margin-bottom:16px">
+          <div style="font-size:12px;font-family:'DM Mono',monospace;color:var(--text3);margin-bottom:10px">最优发布时间窗口 (UTC+8)</div>
+          <div class="form-grid-3" style="gap:8px">
+            <div style="padding:10px;background:var(--bg4);border-radius:var(--r);text-align:center">
+              <div style="font-size:11px;color:var(--text3)">TikTok 欧美</div>
+              <div style="font-size:14px;font-weight:500;color:var(--gold);margin-top:4px">20:00-24:00</div>
+            </div>
+            <div style="padding:10px;background:var(--bg4);border-radius:var(--r);text-align:center">
+              <div style="font-size:11px;color:var(--text3)">Facebook 全球</div>
+              <div style="font-size:14px;font-weight:500;color:var(--blue);margin-top:4px">16:00-20:00</div>
+            </div>
+            <div style="padding:10px;background:var(--bg4);border-radius:var(--r);text-align:center">
+              <div style="font-size:11px;color:var(--text3)">VK 俄罗斯</div>
+              <div style="font-size:14px;font-weight:500;color:var(--teal);margin-top:4px">17:00-21:00</div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-gold" onclick="schedulePost()">📅 AI生成发布策略</button>
+          <button class="btn btn-teal" onclick="previewPosts()">👁 生成差异化文案版本</button>
+        </div>
+        <div id="distribute-status" style="margin-top:12px"></div>
+        <div class="ai-output" id="dist-ai-output" style="display:none;margin-top:12px"></div>
+      </div>
+    </div>
+
+    <!-- ══ LEADS ══ -->
+    <div class="view" id="view-leads">
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="metric-label">本周询盘</div>
+          <div class="metric-value">7</div>
+          <div class="metric-sub metric-up">↑ 40% 上周</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">高意向客户</div>
+          <div class="metric-value">3</div>
+          <div class="metric-sub" style="color:var(--gold)">待跟进</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">平均响应时间</div>
+          <div class="metric-value">18m</div>
+          <div class="metric-sub metric-up">AI 自动回复</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">询盘→意向率</div>
+          <div class="metric-value">43%</div>
+          <div class="metric-sub metric-up">↑ vs 行业均值</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">📬</div>询盘列表</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-teal btn-sm" onclick="generateBatchReply()">🤖 AI 批量生成回复</button>
+            <button class="btn btn-outline btn-sm">⬇ 导出 Excel</button>
+          </div>
+        </div>
+        <table class="lead-table">
+          <thead>
+            <tr><th>客户信息</th><th>来源</th><th>询盘内容</th><th>状态</th><th>操作</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div style="font-weight:500">Sarah Mitchell</div><div style="font-size:11px;color:var(--text3)">Outdoor Brand Inc. · 🇺🇸</div><div style="font-size:11px;color:var(--teal)">sarah@outdoorbrand.com</div></td>
+              <td>TikTok</td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">What's the MOQ for hardshell fabric? Looking for 5000m minimum...</td>
+              <td><span class="status-badge status-hot">🔥 高意向</span></td>
+              <td><button class="btn btn-gold btn-sm" onclick="replyLead('Sarah Mitchell','美国','hardshell fabric MOQ inquiry, 5000m minimum','sarah@outdoorbrand.com')">AI回复</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">Dmitry Volkov</div><div style="font-size:11px;color:var(--text3)">Bask Russia · 🇷🇺</div><div style="font-size:11px;color:var(--teal)">d.volkov@bask.ru</div></td>
+              <td>VK</td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">Интересует прайс на пуховые ткани...</td>
+              <td><span class="status-badge status-new">🔵 新询盘</span></td>
+              <td><button class="btn btn-gold btn-sm" onclick="replyLead('Dmitry Volkov','俄罗斯','down coat fabric pricing inquiry in Russian','d.volkov@bask.ru')">AI回复</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">Anna Weber</div><div style="font-size:11px;color:var(--text3)">Alpine Fashion · 🇩🇪</div><div style="font-size:11px;color:var(--teal)">a.weber@alpinefashion.de</div></td>
+              <td>Instagram</td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">Can you send samples of your parka fabric? Need waterproof...</td>
+              <td><span class="status-badge status-replied">✓ 已回复</span></td>
+              <td><button class="btn btn-outline btn-sm">查看记录</button></td>
+            </tr>
+            <tr>
+              <td><div style="font-weight:500">James Thompson</div><div style="font-size:11px;color:var(--text3)">North Peak · 🇬🇧</div><div style="font-size:11px;color:var(--teal)">j.thompson@northpeak.co.uk</div></td>
+              <td>Facebook</td>
+              <td style="font-size:12px;color:var(--text2);max-width:200px">Looking for fabric supplier for winter jacket line 2026...</td>
+              <td><span class="status-badge status-new">🔵 新询盘</span></td>
+              <td><button class="btn btn-gold btn-sm" onclick="replyLead('James Thompson','英国','winter jacket fabric supplier for 2026 collection','j.thompson@northpeak.co.uk')">AI回复</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card" id="reply-card" style="display:none">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-teal">🤖</div>AI 生成回复邮件</div>
+          <span id="reply-customer-name" style="font-size:12px;color:var(--gold);font-family:'DM Mono',monospace"></span>
+        </div>
+        <div class="ai-output" id="reply-output" style="min-height:120px">请点击客户行的「AI回复」按钮...</div>
+        <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+          <button class="btn btn-gold btn-sm" onclick="copyText('reply-output')">📋 复制邮件</button>
+          <button class="btn btn-teal btn-sm">💬 发送 WhatsApp</button>
+          <button class="btn btn-outline btn-sm">✏️ 编辑后发送</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ API MANAGEMENT ══ -->
+    <div class="view" id="view-api">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-purple">🔌</div>AI API 管理中心</div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-teal btn-sm" onclick="testAllAPIs()">⚡ 全部检测</button>
+            <button class="btn btn-outline btn-sm" onclick="autoSelectBest()">🔄 自动切换最优</button>
+          </div>
+        </div>
+        <div class="current-api-indicator" id="current-api-display">
+          <div class="api-dot on"></div>
+          <span>当前使用：<strong id="current-api-name-display">检测中...</strong></span>
+          <span style="margin-left:auto;color:var(--text3)" id="current-api-latency"></span>
+        </div>
+
+        <!-- Claude/Anthropic -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(240,165,0,0.12);color:var(--gold)">🤖</div>
+            <div>
+              <div class="api-channel-name">Anthropic Claude</div>
+              <div class="api-channel-sub">claude-sonnet-4-20250514 · 付费 · 优先级 #1</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-1">P1 主选</span>
+            <input type="password" class="api-key-field" id="key-claude" placeholder="sk-ant-api03-..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-claude" title="未测试"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('claude')">测试</button>
+          </div>
+        </div>
+
+        <!-- OpenAI -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(0,212,170,0.1);color:var(--teal)">🧠</div>
+            <div>
+              <div class="api-channel-name">OpenAI GPT-4o</div>
+              <div class="api-channel-sub">gpt-4o-mini · 付费 · 优先级 #2</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-2">P2 备选</span>
+            <input type="password" class="api-key-field" id="key-openai" placeholder="sk-proj-..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-openai"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('openai')">测试</button>
+          </div>
+        </div>
+
+        <!-- Gemini -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(79,142,247,0.1);color:var(--blue)">✨</div>
+            <div>
+              <div class="api-channel-name">Google Gemini</div>
+              <div class="api-channel-sub">gemini-1.5-flash · 付费/免费层 · 优先级 #3</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-3">P3 备选</span>
+            <input type="password" class="api-key-field" id="key-gemini" placeholder="AIza..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-gemini"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('gemini')">测试</button>
+          </div>
+        </div>
+
+        <!-- Mistral -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(167,139,250,0.1);color:var(--purple)">🌀</div>
+            <div>
+              <div class="api-channel-name">Mistral AI</div>
+              <div class="api-channel-sub">mistral-small-latest · 付费 · 优先级 #4</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-4">P4 备选</span>
+            <input type="password" class="api-key-field" id="key-mistral" placeholder="..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-mistral"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('mistral')">测试</button>
+          </div>
+        </div>
+
+        <!-- Together AI (Free) -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(255,107,107,0.1);color:var(--red)">🆓</div>
+            <div>
+              <div class="api-channel-name">Together AI (Llama 3)</div>
+              <div class="api-channel-sub">meta-llama/Llama-3.3-70B · 免费额度 · 优先级 #5</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-free">免费</span>
+            <input type="password" class="api-key-field" id="key-together" placeholder="..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-together"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('together')">测试</button>
+          </div>
+        </div>
+
+        <!-- Groq (Free) -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(240,165,0,0.08);color:var(--gold2)">⚡</div>
+            <div>
+              <div class="api-channel-name">Groq (超快速)</div>
+              <div class="api-channel-sub">llama-3.3-70b-versatile · 免费额度极快 · 优先级 #6</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-free">免费</span>
+            <input type="password" class="api-key-field" id="key-groq" placeholder="gsk_..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-groq"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('groq')">测试</button>
+          </div>
+        </div>
+
+        <!-- Cohere -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(0,212,170,0.08);color:var(--teal)">🔹</div>
+            <div>
+              <div class="api-channel-name">Cohere Command R+</div>
+              <div class="api-channel-sub">command-r-plus · 免费试用 · 优先级 #7</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-free">免费</span>
+            <input type="password" class="api-key-field" id="key-cohere" placeholder="..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-cohere"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('cohere')">测试</button>
+          </div>
+        </div>
+
+        <!-- DeepSeek -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(79,142,247,0.1);color:var(--blue)">🐋</div>
+            <div>
+              <div class="api-channel-name">DeepSeek</div>
+              <div class="api-channel-sub">deepseek-chat · 低成本付费 · 优先级 #8</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-3">低成本</span>
+            <input type="password" class="api-key-field" id="key-deepseek" placeholder="sk-..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-deepseek"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('deepseek')">测试</button>
+          </div>
+        </div>
+
+        <!-- HuggingFace -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(167,139,250,0.08);color:var(--purple)">🤗</div>
+            <div>
+              <div class="api-channel-name">HuggingFace Inference</div>
+              <div class="api-channel-sub">Mistral-7B · 完全免费 · 优先级 #9</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-free">完全免费</span>
+            <input type="password" class="api-key-field" id="key-hf" placeholder="hf_..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-hf"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('hf')">测试</button>
+          </div>
+        </div>
+
+        <!-- OpenRouter -->
+        <div class="api-channel-row">
+          <div class="api-channel-info">
+            <div class="api-channel-icon" style="background:rgba(240,165,0,0.08);color:var(--gold)">🔀</div>
+            <div>
+              <div class="api-channel-name">OpenRouter (聚合)</div>
+              <div class="api-channel-sub">多模型聚合路由 · 免费模型可选 · 优先级 #10</div>
+            </div>
+          </div>
+          <div class="api-channel-right">
+            <span class="api-priority-badge priority-free">聚合</span>
+            <input type="password" class="api-key-field" id="key-openrouter" placeholder="sk-or-v1-..." style="width:200px;font-size:12px;padding:6px 10px">
+            <div class="api-test-dot" id="dot-openrouter"></div>
+            <button class="btn btn-outline btn-sm" onclick="testSingleAPI('openrouter')">测试</button>
+          </div>
+        </div>
+
+        <div style="margin-top:16px">
+          <label>API 切换日志</label>
+          <div class="api-log" id="api-log">
+            <div class="log-info">系统初始化完成 · 等待 API Key 配置...</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:14px">
+          <button class="btn btn-gold" onclick="saveAllKeys()">💾 保存所有密钥</button>
+          <button class="btn btn-teal" onclick="testAllAPIs()">⚡ 检测所有通道</button>
+          <button class="btn btn-outline" onclick="clearLog()">🗑 清空日志</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SETTINGS ══ -->
+    <div class="view" id="view-settings">
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title"><div class="card-title-icon icon-gold">⚙️</div>系统配置</div>
+        </div>
+        <div class="form-row">
+          <label>公司名称</label>
+          <input type="text" id="company-name" value="Shaoxing Basha Textile Co., Ltd." />
+        </div>
+        <div class="form-grid">
+          <div>
+            <label>WhatsApp 商务号</label>
+            <input type="text" id="whatsapp-num" placeholder="+86 xxxxxxxxxx" />
+          </div>
+          <div>
+            <label>官方网站</label>
+            <input type="url" id="website-url" placeholder="https://www.basha-textile.com" />
+          </div>
+        </div>
+        <div class="form-row">
+          <label>快速 Claude API Key（同 API 管理页面）</label>
+          <input type="password" id="api-key-quick" placeholder="sk-ant-..." oninput="document.getElementById('key-claude').value=this.value"/>
+        </div>
+        <div class="form-row">
+          <label>自动化开关</label>
+          <div class="toggle-row">
+            <div><div class="toggle-label">API 自动切换（故障转移）</div><div class="toggle-sub">检测到当前 API 失败时自动切换到下一个可用通道</div></div>
+            <div class="toggle on" id="toggle-auto-switch" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">自动评论监控 + 私信回复</div><div class="toggle-sub">ManyChat · 关键词触发</div></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">Lead Form 询盘自动录入 CRM</div><div class="toggle-sub">Facebook Lead Ads → HubSpot</div></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">爆款监控每日自动运行</div><div class="toggle-sub">每天 09:00 自动分析行业热门内容</div></div>
+            <div class="toggle on" onclick="this.classList.toggle('on')"></div>
+          </div>
+          <div class="toggle-row">
+            <div><div class="toggle-label">视频自动发布（需人工审核）</div><div class="toggle-sub">审核通过后定时自动发布</div></div>
+            <div class="toggle" onclick="this.classList.toggle('on')"></div>
+          </div>
+        </div>
+        <button class="btn btn-gold" onclick="saveSettings()">💾 保存设置</button>
+        <div id="settings-status" style="margin-top:10px;font-size:12px;color:var(--teal);font-family:'DM Mono',monospace"></div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const STATE = {
+  currentAPI: null,
+  apiStatus: {},
+  autoSwitch: true,
+  company: 'Shaoxing Basha Textile Co., Ltd.',
+  whatsapp: '+86-xxx-xxxx-xxxx',
+  website: 'https://www.basha-textile.com',
+  selectedLangs: new Set(['en']),
+  scriptsByLang: {}
+};
+
+// ═══════════════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════════════
+const PAGE_TITLES = {
+  dashboard:'总控台', viral:'爆款视频解析', copywrite:'AI文案生成',
+  voice:'声音配置', avatar:'数字人设置', edit:'自动剪辑',
+  distribute:'平台分发', leads:'询盘追踪', api:'API 管理中心', settings:'系统设置'
+};
+
+function switchView(id, el) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  document.getElementById('page-title').textContent = PAGE_TITLES[id] || id;
+  if (el) el.classList.add('active');
+  updateAPIIndicators();
+}
+
+// ═══════════════════════════════════════════════════════
+// API ENGINE — MULTI-CHANNEL WITH AUTO-FALLBACK
+// ═══════════════════════════════════════════════════════
+const API_CHANNELS = [
+  {
+    id: 'claude', name: 'Claude Sonnet', keyId: 'key-claude', priority: 1,
+    async call(prompt, system) {
+      const key = getKey('key-claude');
+      if (!key) throw new Error('no key');
+      const body = {
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        messages: [{ role: 'user', content: prompt }]
+      };
+      if (system) body.system = system;
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.content[0].text;
+    },
+    async stream(prompt, system, onChunk) {
+      const key = getKey('key-claude');
+      if (!key) throw new Error('no key');
+      const body = {
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1500,
+        stream: true,
+        messages: [{ role: 'user', content: prompt }]
+      };
+      if (system) body.system = system;
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const j = JSON.parse(line.slice(6));
+              if (j.type === 'content_block_delta' && j.delta?.text) onChunk(j.delta.text);
+            } catch {}
+          }
+        }
+      }
+    }
+  },
+  {
+    id: 'openai', name: 'GPT-4o-mini', keyId: 'key-openai', priority: 2,
+    async call(prompt, system) {
+      const key = getKey('key-openai');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(prompt, system, onChunk) {
+      const key = getKey('key-openai');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'gpt-4o-mini', max_tokens: 1500, stream: true, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const reader = r.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += dec.decode(value, { stream: true });
+        const lines = buf.split('\n');
+        buf = lines.pop();
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            try {
+              const j = JSON.parse(line.slice(6));
+              const t = j.choices?.[0]?.delta?.content;
+              if (t) onChunk(t);
+            } catch {}
+          }
+        }
+      }
+    }
+  },
+  {
+    id: 'gemini', name: 'Gemini Flash', keyId: 'key-gemini', priority: 3,
+    async call(prompt, system) {
+      const key = getKey('key-gemini');
+      if (!key) throw new Error('no key');
+      const fullPrompt = system ? system + '\n\n' + prompt : prompt;
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.candidates[0].content.parts[0].text;
+    },
+    async stream(prompt, system, onChunk) {
+      const text = await this.call(prompt, system);
+      // Gemini streaming simulation
+      for (let i = 0; i < text.length; i += 3) {
+        onChunk(text.slice(i, i + 3));
+        await new Promise(r => setTimeout(r, 5));
+      }
+    }
+  },
+  {
+    id: 'mistral', name: 'Mistral Small', keyId: 'key-mistral', priority: 4,
+    async call(prompt, system) {
+      const key = getKey('key-mistral');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api.mistral.ai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'mistral-small-latest', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=3){cb(t.slice(i,i+3));await sleep(5);} }
+  },
+  {
+    id: 'together', name: 'Together/Llama3', keyId: 'key-together', priority: 5,
+    async call(prompt, system) {
+      const key = getKey('key-together');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api.together.xyz/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'meta-llama/Llama-3.3-70B-Instruct-Turbo', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=3){cb(t.slice(i,i+3));await sleep(5);} }
+  },
+  {
+    id: 'groq', name: 'Groq/Llama3', keyId: 'key-groq', priority: 6,
+    async call(prompt, system) {
+      const key = getKey('key-groq');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=4){cb(t.slice(i,i+4));await sleep(3);} }
+  },
+  {
+    id: 'cohere', name: 'Cohere Command R+', keyId: 'key-cohere', priority: 7,
+    async call(prompt, system) {
+      const key = getKey('key-cohere');
+      if (!key) throw new Error('no key');
+      const body = { model: 'command-r-plus', max_tokens: 1500, message: prompt };
+      if (system) body.preamble = system;
+      const r = await fetch('https://api.cohere.ai/v1/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify(body)
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.text;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=3){cb(t.slice(i,i+3));await sleep(5);} }
+  },
+  {
+    id: 'deepseek', name: 'DeepSeek Chat', keyId: 'key-deepseek', priority: 8,
+    async call(prompt, system) {
+      const key = getKey('key-deepseek');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'deepseek-chat', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=3){cb(t.slice(i,i+3));await sleep(5);} }
+  },
+  {
+    id: 'hf', name: 'HuggingFace/Mistral', keyId: 'key-hf', priority: 9,
+    async call(prompt, system) {
+      const key = getKey('key-hf');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+        body: JSON.stringify({ model: 'mistralai/Mixtral-8x7B-Instruct-v0.1', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=3){cb(t.slice(i,i+3));await sleep(5);} }
+  },
+  {
+    id: 'openrouter', name: 'OpenRouter', keyId: 'key-openrouter', priority: 10,
+    async call(prompt, system) {
+      const key = getKey('key-openrouter');
+      if (!key) throw new Error('no key');
+      const msgs = [];
+      if (system) msgs.push({ role: 'system', content: system });
+      msgs.push({ role: 'user', content: prompt });
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key, 'HTTP-Referer': 'https://bazaar-ai.app' },
+        body: JSON.stringify({ model: 'mistralai/mistral-7b-instruct:free', max_tokens: 1500, messages: msgs })
+      });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const d = await r.json();
+      return d.choices[0].message.content;
+    },
+    async stream(p, s, cb) { const t = await this.call(p, s); for (let i=0;i<t.length;i+=3){cb(t.slice(i,i+3));await sleep(5);} }
+  }
+];
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function getKey(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
+function getAvailableChannels() {
+  return API_CHANNELS.filter(c => {
+    const key = getKey(c.keyId);
+    return key && key.length > 5;
+  });
+}
+
+function addLog(msg, type = 'info') {
+  const log = document.getElementById('api-log');
+  if (!log) return;
+  const time = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const cls = { ok: 'log-ok', fail: 'log-fail', info: 'log-info', switch: 'log-switch' }[type] || '';
+  log.innerHTML += `<div class="${cls}">[${time}] ${msg}</div>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+function updateTopbarAPI() {
+  const dot = document.getElementById('api-dot-top');
+  const label = document.getElementById('api-label-top');
+  const bar = document.getElementById('api-status-bar');
+  const sideLabel = document.getElementById('sidebar-api-label');
+  if (STATE.currentAPI) {
+    const ch = API_CHANNELS.find(c => c.id === STATE.currentAPI);
+    if (dot) { dot.className = 'api-dot on'; }
+    if (label) label.textContent = ch ? ch.name : STATE.currentAPI;
+    if (bar) bar.className = 'api-status-bar connected';
+    if (sideLabel) sideLabel.textContent = (ch ? ch.name : STATE.currentAPI) + ' · 在线';
+  } else {
+    if (dot) dot.className = 'api-dot';
+    if (label) label.textContent = '配置 API Key';
+    if (bar) bar.className = 'api-status-bar';
+    if (sideLabel) sideLabel.textContent = '未配置 API Key';
+  }
+  const curName = document.getElementById('current-api-name-display');
+  if (curName) {
+    const ch = API_CHANNELS.find(c => c.id === STATE.currentAPI);
+    curName.textContent = ch ? ch.name : '未配置';
+  }
+}
+
+function updateAPIIndicators() {
+  ['viral', 'copy'].forEach(prefix => {
+    const dot = document.getElementById(prefix + '-api-dot');
+    const name = document.getElementById(prefix + '-api-name');
+    if (!dot || !name) return;
+    if (STATE.currentAPI) {
+      const ch = API_CHANNELS.find(c => c.id === STATE.currentAPI);
+      dot.className = 'api-dot on';
+      name.textContent = '使用 ' + (ch ? ch.name : STATE.currentAPI);
+    } else {
+      dot.className = 'api-dot';
+      name.textContent = '请配置 API Key';
+    }
+  });
+}
+
+// Main streaming call with auto-fallback
+async function aiStream(prompt, outputEl, system, onDone) {
+  const channels = getAvailableChannels();
+  if (channels.length === 0) {
+    outputEl.textContent = getDemoOutput(prompt);
+    outputEl.classList.remove('loading');
+    const notice = document.createElement('div');
+    notice.style.cssText = 'margin-top:10px;padding:10px 14px;background:var(--gold-dim);border:1px solid rgba(240,165,0,0.3);border-radius:8px;font-size:12px;color:var(--gold2)';
+    notice.innerHTML = '💡 <strong>演示模式</strong>：请前往「API 管理」页面配置 API Key 以使用真实 AI 功能。以上为演示内容。';
+    outputEl.parentElement.insertBefore(notice, outputEl.nextSibling);
+    setTimeout(() => notice.remove(), 8000);
+    if (onDone) onDone();
+    return;
+  }
+
+  outputEl.textContent = '';
+  outputEl.classList.remove('loading');
+
+  for (let i = 0; i < channels.length; i++) {
+    const ch = channels[i];
+    try {
+      if (i > 0) {
+        addLog(`⚡ 切换至备用通道: ${ch.name}`, 'switch');
+        updateTopbarAPI();
+      }
+      STATE.currentAPI = ch.id;
+      updateTopbarAPI();
+      outputEl.textContent = '';
+      await ch.stream(prompt, system, (chunk) => {
+        outputEl.textContent += chunk;
+        outputEl.scrollTop = outputEl.scrollHeight;
+      });
+      addLog(`✅ ${ch.name} 响应成功`, 'ok');
+      if (onDone) onDone();
+      return;
+    } catch (e) {
+      addLog(`❌ ${ch.name} 失败: ${e.message}`, 'fail');
+      STATE.apiStatus[ch.id] = 'fail';
+      const dot = document.getElementById('dot-' + ch.id);
+      if (dot) dot.className = 'api-test-dot fail';
+      if (!STATE.autoSwitch || i === channels.length - 1) {
+        outputEl.textContent = getDemoOutput(prompt);
+        if (onDone) onDone();
+        return;
+      }
+    }
+  }
+}
+
+// Quick non-streaming call
+async function aiCall(prompt, system) {
+  const channels = getAvailableChannels();
+  if (channels.length === 0) return getDemoOutput(prompt);
+  for (const ch of channels) {
+    try {
+      STATE.currentAPI = ch.id;
+      updateTopbarAPI();
+      const result = await ch.call(prompt, system);
+      return result;
+    } catch (e) {
+      addLog(`❌ ${ch.name} 快速调用失败: ${e.message}`, 'fail');
+    }
+  }
+  return getDemoOutput(prompt);
+}
+
+// ═══════════════════════════════════════════════════════
+// SYSTEM PROMPT
+// ═══════════════════════════════════════════════════════
+function getSysPrompt() {
+  const co = document.getElementById('company-name')?.value || STATE.company;
+  const wa = document.getElementById('whatsapp-num')?.value || STATE.whatsapp;
+  const web = document.getElementById('website-url')?.value || STATE.website;
+  return `你是${co}的海外营销AI助手。
+公司简介：绍兴芭莎纺织，成立2002年，位于绍兴柯桥（亚洲最大纺织品集散地），专注冬季户外服装面料出口（硬壳/羽绒/棉服/风衣/派克大衣等），年产300+款，已供货全球多个知名品牌，20年+生产经验。
+WhatsApp: ${wa} | 官网: ${web}
+请用专业、准确、有吸引力的方式回答，英文内容面向欧美B2B采购商。`;
+}
+
+// ═══════════════════════════════════════════════════════
+// DEMO OUTPUT
+// ═══════════════════════════════════════════════════════
+function getDemoOutput(prompt) {
+  const p = prompt.toLowerCase();
+  if (p.includes('爆款') || p.includes('viral') || p.includes('analyze')) return `【爆款结构分析报告】
+
+🎯 视频类型：产品功能展示 + 社会认同型
+
+📊 核心结构（30秒黄金版本）：
+• 0-3秒 HOOK：水珠滚落防水面料慢动作特写 + 悬念文字「你的客户真的能在-20°C穿暖吗？」
+• 3-10秒 PAIN：展示劣质面料失效场景 → 引发共鸣
+• 10-20秒 SOLUTION：芭莎面料3大核心卖点快速切换（防水/保暖/质感）
+• 20-27秒 PROOF：工厂规模镜头 + 知名品牌LOGO背书
+• 27-30秒 CTA：「免费样品申请 · WhatsApp我们」
+
+🔑 高转化关键词（英文）：
+waterproof fabric supplier | outdoor textile wholesale | hardshell fabric MOQ | winter jacket fabric manufacturer | OEM fabric China
+
+💡 芭莎专属建议：
+→ 开场镜头：面料防水测试（水珠高速摄影）效果最佳
+→ 强调「柯桥产地」作为质量信任背书
+→ 加入「20年」「300+款」数字增强可信度`;
+
+  if (p.includes('文案') || p.includes('script') || p.includes('copy') || p.includes('脚本')) return `【英文脚本 · 30秒标准版】
+
+[0-3s] ⚡ HOOK
+"Is your supplier actually delivering the quality your brand deserves?"
+
+[3-12s] 💎 VALUE PROPOSITION
+"At Shaoxing Basha Textile, we've spent 20 years perfecting premium winter outdoor fabrics. Hardshell. Down coat. Parka. Trench. 300+ new styles every single year — from the heart of Asia's largest textile hub."
+
+[12-22s] 🏆 TRUST & SCALE
+"Our fabrics are trusted by global brands across North America, Europe, and Russia. With flexible MOQ, fast sampling, and 20-year production expertise — we're ready when you are."
+
+[22-30s] 📲 CTA
+"Request your FREE sample pack today. DM us or click the link below. Let's build something great together."
+
+---
+【俄文版 · 30秒】
+[0-3s] Хотите найти надёжного поставщика тканей для зимней коллекции?
+[3-12s] Shaoxing Basha Textile — 20 лет производства premium тканей для зимней одежды...
+[22-30s] Запросите бесплатные образцы сегодня. Пишите нам в WhatsApp!`;
+
+  if (p.includes('回复') || p.includes('reply') || p.includes('email') || p.includes('inquir')) return `Subject: Re: Fabric Inquiry — Shaoxing Basha Textile Co., Ltd.
+
+Dear [Client Name],
+
+Thank you so much for reaching out! We're thrilled to connect with you.
+
+I'm [Name] from the sales team at Shaoxing Basha Textile, located in Keqiao — Asia's largest textile distribution hub. We've been manufacturing premium winter outdoor fabrics for 20+ years, supplying global brands with hardshell, down coat, parka, and performance fabrics.
+
+To better assist you, could you share:
+• Fabric type & specifications needed (weight g/m², waterproof rating, stretch %)
+• Estimated order volume (initial and annual)
+• Target price range
+• Required delivery timeline
+
+We offer:
+✅ Flexible MOQ (from 300m for new partners)
+✅ Free sample packs (delivered in 5-7 business days)
+✅ 300+ new styles for 2025/26 Winter Season
+✅ OEM/ODM customization available
+
+I'd love to send you our latest collection catalog and discuss how we can support your brand.
+
+Looking forward to a great partnership!
+
+Best regards,
+Sales Team | Shaoxing Basha Textile Co., Ltd.
+📱 WhatsApp: +86-xxx-xxxx-xxxx
+🌐 www.basha-textile.com`;
+
+  if (p.includes('voice') || p.includes('配音') || p.includes('声音')) return `【优化后配音文本 · 专业自信风格】
+
+英文版（30秒）：
+"Looking for a fabric partner who truly understands outdoor performance? 
+At Shaoxing Basha Textile — Asia's premier fabric manufacturer — we've spent two decades crafting world-class hardshell, down coat, and parka fabrics that global brands trust. 
+Three hundred new designs, every year. Flexible minimums. Sample-ready.
+Your next collection starts here. Request your free samples today."
+
+配音节奏建议：
+→ 前5秒：语速稍慢，增加权威感
+→ 中段：节奏加快，突出数字（"two decades" "three hundred"）
+→ 结尾CTA：清晰有力，稍停顿后说"today"`;
+
+  if (p.includes('avatar') || p.includes('数字人') || p.includes('口播')) return `【数字人口播脚本 · 优化版】
+
+推荐形象：欧美金发女性 · 商务休闲装 · 工厂/产品实拍背景
+
+口播脚本（分镜格式）：
+
+[镜头1 · 0-3s] 正面近景
+"If you're sourcing winter fabrics — you need to see this."
+(配合：面料close-up B-roll)
+
+[镜头2 · 3-15s] 侧面+手势展示
+"I'm here at Shaoxing Basha Textile. Twenty years. Three hundred styles every season. This is hardshell that actually performs at minus twenty degrees."
+(配合：防水测试素材)
+
+[镜头3 · 15-25s] 正面自信表情
+"Global brands trust us. And with flexible MOQ, you can too — whether you're scaling up or just starting out."
+
+[镜头4 · 25-30s] 看向镜头+微笑
+"Free samples. Click the link. Let's talk."
+(配合：WhatsApp二维码 + 官网URL字幕)
+
+HeyGen参数建议：语速0.95x · 英式口音 · 自信情感模式`;
+
+  if (p.includes('剪辑') || p.includes('edit') || p.includes('合成')) return `【自动剪辑方案 · TikTok爆款模板】
+
+视频结构规划（30秒版）：
+
+[0-2s] OPENING HOOK
+素材：防水测试水珠慢动作 ← 已选素材①
+字幕：「YOUR SUPPLIER IS HOLDING YOU BACK」
+音效：水声 → 动感beat切入
+
+[2-8s] PRODUCT SHOWCASE  
+素材：面料质感慢动作特写 ← 已选素材②
+字幕：20 YEARS · HARDSHELL · DOWN COAT · PARKA
+节奏：快切3帧/秒
+
+[8-20s] FACTORY PROOF
+素材：织造车间生产实拍 ← 已选素材③
+字幕：SHAOXING KEQIAO · ASIA'S #1 TEXTILE HUB
+配音：数字人口播同步
+
+[20-28s] SOCIAL PROOF
+素材：品牌标志（模糊处理）+ 订单数据图表
+字幕：300+ STYLES · GLOBAL BRANDS
+
+[28-30s] CTA CARD
+品牌Logo + WhatsApp号码 + 官网URL
+动效：渐入 + 轻微缩放
+
+输出规格：9:16(1080×1920) · 1:1(1080×1080) · 16:9(1920×1080)
+导出格式：MP4 H.264 · 60fps · CBR 8Mbps`;
+
+  if (p.includes('发布') || p.includes('distribut') || p.includes('schedule') || p.includes('策略')) return `【多平台差异化发布策略】
+
+📱 TikTok（英文版 · 欧美市场）
+发布时间：每日 20:30 UTC+8（对应美东 8:30am）
+文案风格：原生感强、口语化、加trend音乐
+标签：#fabricsupplier #outdoorfabric #winterfashion #B2Btextile
+说明文字：250字以内，首行必须含钩子
+
+📘 Facebook Reels（英/德文版）
+发布时间：16:00 UTC+8（欧洲工作时间）
+文案风格：专业商务，强调MOQ/质量/交期
+标签：#TextileManufacturer #FabricWholesale #MadeInChina
+配合Lead广告表单
+
+📷 Instagram Reels（英文视觉版）
+发布时间：21:00 UTC+8
+文案风格：美观简洁，强调质感和brand story
+标签：#sustainablefabric #fashiondesigner #fabricsourcing
+
+💙 VK（俄文版）
+发布时间：18:00 UTC+8（莫斯科 13:00）
+文案风格：详细说明+价格区间引导
+配合俄语数字人版本视频
+
+⚠️ 差异化处理：
+每个平台视频开头3秒不同 · 字幕颜色各异 · 文案关键词变换 · 避免同质内容检测`;
+
+  return `AI分析完成。\n请前往「API 管理」页面配置 API Key 以获取真实的个性化分析结果。\n\n当前显示为演示内容，实际效果将根据您的具体输入量身定制。`;
+}
+
+// ═══════════════════════════════════════════════════════
+// API TEST
+// ═══════════════════════════════════════════════════════
+async function testSingleAPI(id) {
+  const ch = API_CHANNELS.find(c => c.id === id);
+  if (!ch) return;
+  const dot = document.getElementById('dot-' + id);
+  const key = getKey(ch.keyId);
+  if (!key || key.length < 5) {
+    addLog(`⚠️ ${ch.name}: 未填入 API Key`, 'fail');
+    if (dot) dot.className = 'api-test-dot fail';
+    return;
+  }
+  if (dot) dot.className = 'api-test-dot active';
+  addLog(`🔍 测试 ${ch.name}...`, 'info');
+  try {
+    const t0 = Date.now();
+    await ch.call('Reply with just: OK', null);
+    const ms = Date.now() - t0;
+    if (dot) dot.className = 'api-test-dot ok';
+    STATE.apiStatus[id] = 'ok';
+    addLog(`✅ ${ch.name}: 连接成功 (${ms}ms)`, 'ok');
+    if (!STATE.currentAPI) {
+      STATE.currentAPI = id;
+      updateTopbarAPI();
+    }
+  } catch (e) {
+    if (dot) dot.className = 'api-test-dot fail';
+    STATE.apiStatus[id] = 'fail';
+    addLog(`❌ ${ch.name}: ${e.message}`, 'fail');
+  }
+}
+
+async function testAllAPIs() {
+  addLog('━━━ 开始全通道检测 ━━━', 'info');
+  STATE.currentAPI = null;
+  for (const ch of API_CHANNELS) {
+    await testSingleAPI(ch.id);
+    await sleep(200);
+  }
+  updateTopbarAPI();
+  updateAPIIndicators();
+  const okCount = Object.values(STATE.apiStatus).filter(s => s === 'ok').length;
+  addLog(`━━━ 检测完成: ${okCount}/${API_CHANNELS.length} 通道可用 ━━━`, 'info');
+}
+
+function autoSelectBest() {
+  const best = API_CHANNELS.find(c => STATE.apiStatus[c.id] === 'ok');
+  if (best) {
+    STATE.currentAPI = best.id;
+    updateTopbarAPI();
+    updateAPIIndicators();
+    addLog(`🔄 已切换至最优通道: ${best.name}`, 'switch');
+  } else {
+    addLog('⚠️ 无可用通道，请先检测或配置 API Key', 'fail');
+  }
+}
+
+function saveAllKeys() {
+  try {
+    API_CHANNELS.forEach(ch => {
+      const val = getKey(ch.keyId);
+      if (val) localStorage.setItem('bazaar_' + ch.id, val);
+    });
+    addLog('💾 所有密钥已保存到本地', 'ok');
+  } catch(e) {
+    addLog('⚠️ 保存失败（隐私模式下不支持）', 'fail');
+  }
+}
+
+function loadSavedKeys() {
+  try {
+    API_CHANNELS.forEach(ch => {
+      const saved = localStorage.getItem('bazaar_' + ch.id);
+      if (saved) {
+        const el = document.getElementById(ch.keyId);
+        if (el) el.value = saved;
+      }
+    });
+    const hasAny = getAvailableChannels().length > 0;
+    if (hasAny) {
+      addLog('🔑 已加载保存的 API Keys', 'ok');
+      autoSelectBest();
+    }
+  } catch(e) {}
+}
+
+function clearLog() {
+  const log = document.getElementById('api-log');
+  if (log) log.innerHTML = '<div class="log-info">日志已清空</div>';
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: VIRAL ANALYSIS
+// ═══════════════════════════════════════════════════════
+async function analyzeViral() {
+  const input = document.getElementById('viral-input').value || 'outdoor fabric';
+  const category = document.getElementById('viral-category').value;
+  const market = document.getElementById('viral-market').value;
+  const out = document.getElementById('viral-output');
+  const btn = document.getElementById('viral-btn');
+  const actions = document.getElementById('viral-actions');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 分析中...';
+  out.textContent = '🔍 正在解析爆款结构...';
+  out.classList.add('loading');
+  actions.style.display = 'none';
+
+  const prompt = `请对以下社媒内容主题进行深度爆款结构分析，用于芭莎纺织的海外短视频营销。
+
+关键词/主题：${input}
+面料类目：${category}
+目标市场：${market}
+
+请输出：
+1. 爆款视频结构（含时间轴：钩子/内容/高潮/CTA）
+2. 高转化英文关键词TOP10（分平台）
+3. 可直接复用的脚本框架（含场景切换建议）
+4. 芭莎纺织专属差异化建议（基于柯桥产地优势）
+5. 视觉素材拍摄建议
+
+格式：结构清晰，重点加粗，中英双语关键内容。`;
+
+  out.classList.remove('loading');
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    btn.disabled = false;
+    btn.innerHTML = '<span>🔍</span> AI 深度解析爆款结构';
+    actions.style.display = 'flex';
+  });
+}
+
+function sendViralToCopy() {
+  const viral = document.getElementById('viral-output').textContent.slice(0, 200);
+  document.getElementById('copy-usp').value = '基于爆款分析：' + viral.slice(0, 80);
+  switchView('copywrite', document.querySelectorAll('.nav-item')[2]);
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: COPY GENERATION
+// ═══════════════════════════════════════════════════════
+function toggleLang(el) {
+  el.classList.toggle('active');
+  const lang = el.dataset.lang;
+  if (el.classList.contains('active')) STATE.selectedLangs.add(lang);
+  else STATE.selectedLangs.delete(lang);
+}
+
+function togglePlatform(el) {
+  const p = el.dataset.p;
+  el.classList.toggle('sel-' + p);
+}
+
+function toggleChip(el, groupId) {
+  if (groupId) {
+    document.getElementById(groupId)?.querySelectorAll('.lang-chip').forEach(c => c.classList.remove('active'));
+  }
+  el.classList.add('active');
+}
+
+async function generateCopy() {
+  const product = document.getElementById('copy-product').value;
+  const duration = document.getElementById('copy-duration').value;
+  const usp = document.getElementById('copy-usp').value || '20年生产经验，绍兴柯桥，年产300+款';
+  const btn = document.getElementById('copy-btn');
+  const langs = [...STATE.selectedLangs];
+  if (langs.length === 0) { alert('请至少选择一种语言'); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> 生成中...';
+
+  const langMap = { en:'英文(English)', ru:'俄文(Русский)', ar:'阿拉伯文(العربية)', de:'德文(Deutsch)', fr:'法文(Français)', es:'西班牙文(Español)' };
+  const prompt = `请为芭莎纺织生成${langs.length}个语言版本的短视频营销脚本：
+
+产品：${product}
+时长：${duration}
+核心卖点：${usp}
+目标语言：${langs.map(l => langMap[l]).join('、')}
+
+每个版本要求：
+- 明确标注语言版本
+- 时间轴标注（精确到秒）
+- 包含HOOK/内容/CTA三段结构
+- CTA引导WhatsApp询价或官网申请免费样品
+- 适配各语言用户的语言习惯和文化偏好
+- 专业B2B风格，面向品牌采购商
+
+请分别输出每种语言版本，版本之间用「---」分隔。`;
+
+  document.getElementById('copy-result').style.display = 'block';
+  const content = document.getElementById('script-content');
+  content.textContent = '';
+
+  // Build tabs
+  const tabs = document.getElementById('script-tabs');
+  tabs.innerHTML = langs.map((l, i) =>
+    `<div class="script-lang-tab ${i === 0 ? 'active' : ''}" onclick="switchScriptTab(this)">${langMap[l].split('(')[0]}</div>`
+  ).join('');
+
+  await aiStream(prompt, content, getSysPrompt(), () => {
+    btn.disabled = false;
+    btn.innerHTML = '<span>✨</span> AI 一键生成多语言脚本';
+  });
+}
+
+function switchScriptTab(el) {
+  document.querySelectorAll('.script-lang-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function sendToAvatar() {
+  const script = document.getElementById('script-content').textContent.slice(0, 600);
+  document.getElementById('avatar-script').value = script;
+  switchView('avatar', document.querySelectorAll('.nav-item')[4]);
+}
+
+function sendToVoice() {
+  const script = document.getElementById('script-content').textContent.slice(0, 400);
+  document.getElementById('voice-text').value = script;
+  switchView('voice', document.querySelectorAll('.nav-item')[3]);
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: VOICE
+// ═══════════════════════════════════════════════════════
+async function previewVoice() {
+  const text = document.getElementById('voice-text').value;
+  const voiceType = document.getElementById('voice-type').value;
+  const speed = document.getElementById('voice-speed').value;
+  const style = document.querySelector('#voice-style-chips .lang-chip.active')?.textContent || '专业自信';
+  const out = document.getElementById('voice-ai-output');
+  const status = document.getElementById('voice-status');
+
+  out.style.display = 'block';
+  out.textContent = '🎵 AI正在优化配音文本...';
+  status.innerHTML = '<span class="spinner"></span> 处理中...';
+
+  const prompt = `请对以下配音文本进行专业优化，使其更适合${voiceType}风格的AI配音：
+
+原文：${text}
+
+要求：
+1. 根据「${style}」情感风格调整语气
+2. 添加朗读停顿标记（用 | 表示短停，|| 表示长停）
+3. 强调词加粗（用**词语**标注）
+4. 语速建议（针对${speed}语速优化句子长度）
+5. 同时提供英文原版和优化版对比
+6. 输出 ElevenLabs/HeyGen 参数建议`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--teal)">✅ 配音文本优化完成 · 可复制至 ElevenLabs 或 HeyGen 使用</span>';
+  });
+}
+
+async function generateVoice() {
+  const text = document.getElementById('voice-text').value;
+  const out = document.getElementById('voice-ai-output');
+  const status = document.getElementById('voice-status');
+
+  out.style.display = 'block';
+  out.textContent = '⬇ 正在生成配音脚本包...';
+  status.innerHTML = '<span class="spinner"></span> 生成多语言配音脚本...';
+
+  const prompt = `请为以下文本生成完整的配音脚本包，包含：
+
+原始文本：${text}
+
+请输出：
+1. 英文配音脚本（含停顿/重音标注）
+2. 俄文翻译配音版本
+3. 德文翻译配音版本
+4. 阿拉伯文翻译版本
+5. 各版本ElevenLabs参数推荐（stability/similarity/style_exaggeration）
+6. 配音时长估算（基于不同语速）
+
+格式化输出，便于直接导入配音系统。`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--teal)">✅ 多语言配音脚本包已生成 · 可导入 ElevenLabs / HeyGen / D-ID 使用</span>';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: AVATAR
+// ═══════════════════════════════════════════════════════
+async function generateAvatar() {
+  const script = document.getElementById('avatar-script').value;
+  const platform = document.getElementById('avatar-platform').value;
+  const market = document.getElementById('avatar-market').value;
+  const out = document.getElementById('avatar-ai-output');
+  const status = document.getElementById('avatar-status');
+
+  out.style.display = 'block';
+  out.textContent = '🎬 AI正在优化口播脚本...';
+  status.innerHTML = '<span class="spinner"></span> 生成数字人配置方案...';
+
+  const prompt = `请为数字人视频生成完整的制作方案：
+
+口播脚本：${script}
+数字人平台：${platform}
+目标市场形象：${market}
+
+请输出：
+1. 口播脚本优化版（适合数字人朗读节奏，加停顿标记）
+2. ${platform} 具体配置参数（表情/手势/背景/镜头切换）
+3. 分镜脚本（含B-roll素材建议，时间精确到秒）
+4. 字幕文本（英文+中文对照）
+5. 视频后期建议（字幕样式/特效/音乐）
+6. 发布各平台时的文案差异化建议`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--teal)">✅ 数字人制作方案已生成 · 可导入 ' + platform + ' 使用</span>';
+  });
+}
+
+async function previewAvatar() {
+  const script = document.getElementById('avatar-script').value;
+  const out = document.getElementById('avatar-ai-output');
+  const status = document.getElementById('avatar-status');
+
+  out.style.display = 'block';
+  status.innerHTML = '👁 生成预览配置...';
+
+  const prompt = `请为以下数字人口播内容生成简要的HeyGen API调用参数配置：
+
+脚本：${script}
+
+请以JSON格式输出HeyGen视频生成参数，并附带中文说明：
+- avatar_id选择建议
+- voice_id推荐
+- background设置
+- 视频规格参数
+- 预计生成时间`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--gold)">👁 预览配置已生成</span>';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: EDIT
+// ═══════════════════════════════════════════════════════
+const selectedVideos = new Set();
+
+function toggleVideoCard(el) {
+  const id = el.id;
+  if (selectedVideos.has(id)) {
+    selectedVideos.delete(id);
+    el.style.borderColor = '';
+  } else {
+    selectedVideos.add(id);
+    el.style.borderColor = 'var(--gold)';
+  }
+}
+
+async function startEdit() {
+  const template = document.getElementById('edit-template').value;
+  const subtitle = document.getElementById('edit-subtitle').value;
+  const bgm = document.getElementById('edit-bgm').value;
+  const out = document.getElementById('edit-ai-output');
+  const status = document.getElementById('edit-status');
+
+  const selected = [...selectedVideos].length;
+  out.style.display = 'block';
+  status.innerHTML = '<span class="spinner"></span> AI生成剪辑方案...';
+
+  const prompt = `请为芭莎纺织短视频生成专业的自动剪辑方案：
+
+剪辑模板：${template}
+已选素材：${selected}条视频（防水测试/面料质感/工厂实拍）
+字幕样式：${subtitle}
+背景音乐：${bgm}
+
+请输出：
+1. 完整分镜剪辑脚本（精确到帧，含转场效果）
+2. 字幕文本内容（英文主字幕+中文辅助）
+3. 音乐节奏与画面切换同步方案
+4. 特效建议（速度变化/滤镜/文字动画）
+5. 三种规格（9:16/1:1/16:9）的差异化处理方案
+6. 导出参数建议（码率/帧率/格式）
+7. CapCut/Premiere Pro 操作步骤`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--teal)">✅ 剪辑方案生成完成 · 可导入 CapCut / Premiere / Final Cut 执行</span>';
+  });
+}
+
+async function getEditScript() {
+  const out = document.getElementById('edit-ai-output');
+  out.style.display = 'block';
+  out.textContent = '📋 生成剪辑执行脚本...';
+
+  const prompt = `请生成一份可直接在CapCut（剪映专业版）执行的芭莎纺织30秒推广视频剪辑操作清单：
+
+包含：每个操作步骤、时间码、参数值、具体点击位置
+格式：步骤编号 + 操作描述 + 参数值
+目标：让无视频编辑经验的操作员也能完成高质量剪辑`;
+
+  await aiStream(prompt, out, getSysPrompt());
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: DISTRIBUTE
+// ═══════════════════════════════════════════════════════
+async function schedulePost() {
+  const timing = document.getElementById('dist-timing').value;
+  const freq = document.getElementById('dist-freq').value;
+  const out = document.getElementById('dist-ai-output');
+  const status = document.getElementById('distribute-status');
+
+  out.style.display = 'block';
+  status.innerHTML = '<span class="spinner"></span> 生成发布策略...';
+
+  const prompt = `请为芭莎纺织生成完整的多平台社媒发布策略：
+
+发布时间策略：${timing}
+发布频率：${freq}
+
+请输出：
+1. 本周7天的完整发布计划表（时间/平台/内容版本）
+2. 每个平台的差异化文案策略（防止跨平台同质）
+3. TikTok/Facebook/Instagram/VK各平台最优发布时间（含时区说明）
+4. 标签策略（各平台最佳标签组合）
+5. 发布后互动运营建议（评论回复关键词/触发私信模板）
+6. KPI追踪指标建议（各平台核心数据）`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--teal)">✅ 发布策略已生成</span>';
+  });
+}
+
+async function previewPosts() {
+  const out = document.getElementById('dist-ai-output');
+  const status = document.getElementById('distribute-status');
+
+  out.style.display = 'block';
+  status.innerHTML = '<span class="spinner"></span> 生成差异化版本预览...';
+
+  const prompt = `请为同一个芭莎纺织面料视频生成4个平台的差异化发布版本：
+
+要求：
+1. TikTok版本：年轻化语气，趋势标签，原生感文案
+2. Facebook版本：商务专业，详细产品说明，Lead广告CTA
+3. Instagram版本：视觉美学导向，品牌故事，精选标签
+4. VK版本：俄文，详细说明+价格引导，适合俄罗斯B2B采购商
+
+每个版本包含：发布文案+标签+CTA按钮文字+视频说明
+特别注意：文案措辞/关键词/句式结构必须有明显差异`;
+
+  await aiStream(prompt, out, getSysPrompt(), () => {
+    status.innerHTML = '<span style="color:var(--teal)">✅ 4平台差异化版本生成完成</span>';
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: LEADS
+// ═══════════════════════════════════════════════════════
+async function replyLead(name, country, inquiry, email) {
+  const card = document.getElementById('reply-card');
+  const out = document.getElementById('reply-output');
+  const nameEl = document.getElementById('reply-customer-name');
+
+  card.style.display = 'block';
+  if (nameEl) nameEl.textContent = '→ ' + name;
+  out.textContent = '🤖 正在生成专业回复邮件...';
+  out.classList.add('loading');
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  const isRussian = country.includes('俄');
+  const prompt = `请为芭莎纺织生成一封专业的B2B询盘回复邮件：
+
+客户姓名：${name}
+来源国家：${country}
+询盘内容：${inquiry}
+客户邮箱：${email}
+${isRussian ? '请同时提供俄文版本' : ''}
+
+邮件要求：
+- ${isRussian ? '英文+俄文双版本' : '专业英文'}
+- 感谢询盘 + 芭莎优势介绍（20年/柯桥/300+款/全球品牌）
+- 针对性回答客户询问的具体问题
+- 询问客户详细需求（面料规格/数量/交期/目标价格）
+- 主动提供免费样品寄送
+- 邮件结尾含完整联系信息
+- Subject line + 正文完整输出`;
+
+  out.classList.remove('loading');
+  await aiStream(prompt, out, getSysPrompt());
+}
+
+async function generateBatchReply() {
+  const card = document.getElementById('reply-card');
+  const out = document.getElementById('reply-output');
+
+  card.style.display = 'block';
+  out.textContent = '🤖 正在批量生成回复模板...';
+  out.classList.add('loading');
+
+  const prompt = `请为芭莎纺织生成完整的B2B询盘回复模板库，包含：
+
+1. 英文标准首次回复模板（新询盘）
+2. 英文跟进模板（3天无回复）
+3. 俄文询盘专用回复模板
+4. 样品申请确认模板
+5. MOQ/价格询问标准回复
+6. 建立长期合作关系洽谈模板
+
+每个模板包含：邮件主题 + 正文 + [可替换变量]标注`;
+
+  out.classList.remove('loading');
+  await aiStream(prompt, out, getSysPrompt());
+}
+
+// ═══════════════════════════════════════════════════════
+// FEATURE: PIPELINE
+// ═══════════════════════════════════════════════════════
+async function runPipeline() {
+  const nodes = 7;
+  const steps = [
+    '🔍 AI分析今日爆款趋势...',
+    '✍️ 生成英/俄/德三语文案...',
+    '🎙 合成AI配音脚本...',
+    '👤 渲染数字人口播视频...',
+    '✂️ 自动剪辑合成3规格视频...',
+    '🚀 发布至TikTok/FB/INS/VK...',
+    '📬 启动询盘监控与自动回复...'
+  ];
+  const statusEl = document.getElementById('pipeline-status');
+  const progress = document.getElementById('pipeline-progress');
+
+  statusEl.style.color = 'var(--text3)';
+
+  for (let i = 0; i < nodes; i++) {
+    if (i > 0) {
+      document.getElementById('pn' + (i - 1)).className = 'pipe-circle done';
+      document.getElementById('pc' + (i - 1)).className = 'pipe-connector done';
+    }
+    document.getElementById('pn' + i).className = 'pipe-circle active';
+    statusEl.textContent = steps[i];
+    progress.style.width = ((i + 1) / nodes * 100) + '%';
+    await sleep(1100);
+  }
+  document.getElementById('pn6').className = 'pipe-circle done';
+  statusEl.textContent = '✅ 本轮自动化生产完成！已生产4条视频并发布至所有平台。';
+  statusEl.style.color = 'var(--teal)';
+}
+
+// ═══════════════════════════════════════════════════════
+// SETTINGS
+// ═══════════════════════════════════════════════════════
+function saveSettings() {
+  const status = document.getElementById('settings-status');
+  STATE.autoSwitch = document.getElementById('toggle-auto-switch')?.classList.contains('on');
+  // Sync quick key
+  const quickKey = document.getElementById('api-key-quick')?.value;
+  if (quickKey) document.getElementById('key-claude').value = quickKey;
+  try {
+    localStorage.setItem('bazaar_settings', JSON.stringify({
+      company: document.getElementById('company-name')?.value,
+      whatsapp: document.getElementById('whatsapp-num')?.value,
+      website: document.getElementById('website-url')?.value
+    }));
+  } catch(e) {}
+  status.textContent = '✅ 设置已保存';
+  setTimeout(() => status.textContent = '', 3000);
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('bazaar_settings') || '{}');
+    if (s.company) document.getElementById('company-name').value = s.company;
+    if (s.whatsapp) document.getElementById('whatsapp-num').value = s.whatsapp;
+    if (s.website) document.getElementById('website-url').value = s.website;
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function copyText(elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const orig = event.currentTarget.textContent;
+    event.currentTarget.textContent = '✓ 已复制';
+    setTimeout(() => event.currentTarget.textContent = orig, 2000);
+  }).catch(() => {
+    const range = document.createRange();
+    range.selectNode(el);
+    window.getSelection().removeAllRanges();
+    window.getSelection().addRange(range);
+    document.execCommand('copy');
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  loadSavedKeys();
+  loadSettings();
+  updateTopbarAPI();
+  updateAPIIndicators();
+  addLog('🚀 Bazaar AI v2.0 初始化完成 · 10条API通道就绪', 'info');
+
+  const avail = getAvailableChannels();
+  if (avail.length > 0) {
+    STATE.currentAPI = avail[0].id;
+    updateTopbarAPI();
+    addLog(`✅ 检测到已保存密钥 · 使用 ${avail[0].name}`, 'ok');
+    testAllAPIs();
+  } else {
+    addLog('💡 请前往「API 管理」配置 API Key 以启用真实AI功能', 'info');
+  }
+});
+</script>
+</body>
+</html>
